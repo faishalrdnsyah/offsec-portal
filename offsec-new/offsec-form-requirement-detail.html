@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Form &amp; Requirement Detail — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  .crumb { display:inline-flex; align-items:center; gap: 6px; font-size: 12.5px; color: var(--text-muted); text-decoration: none; }
+  .crumb:hover { color: var(--text); }
+  .crumb .material-symbols-outlined { font-size: 16px; }
+
+  .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+  @media (max-width: 1080px) { .detail-grid { grid-template-columns: 1fr; } }
+
+  .section-card { padding: 20px 22px; }
+  .section-h { display:flex; align-items:center; gap: 10px; margin-bottom: 16px; }
+  .section-h .ic { width: 30px; height: 30px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); display:flex; align-items:center; justify-content:center; }
+  .section-h .ic .material-symbols-outlined { font-size: 17px; }
+  .section-h .t { font-size: 14px; font-weight: 700; color: var(--text); }
+
+  /* Q&A list */
+  .qa { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .qa:first-child { padding-top: 0; }
+  .qa:last-child { border-bottom: 0; padding-bottom: 0; }
+  .qa .q { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .qa .a { font-size: 13.5px; line-height: 1.6; color: var(--text); }
+  .qa .a.empty { color: var(--text-faint); font-style: italic; }
+  .qa .a code { font-family: 'JetBrains Mono', monospace; background: var(--surface-2); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+  .bool-yes { display:inline-flex; align-items:center; gap:5px; color: var(--accent); font-weight: 600; }
+  .bool-no  { display:inline-flex; align-items:center; gap:5px; color: var(--text-muted); font-weight: 600; }
+  .bool-yes .material-symbols-outlined, .bool-no .material-symbols-outlined { font-size: 16px; }
+
+  /* Credential card */
+  .cred { padding: 14px 16px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; }
+  .cred + .cred { margin-top: 12px; }
+  .cred-url { display:flex; align-items:center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--text); font-weight: 600; margin-bottom: 12px; overflow-wrap: anywhere; }
+  .cred-url .material-symbols-outlined { font-size: 16px; color: var(--text-muted); flex-shrink: 0; }
+  .cred-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+  @media (max-width: 560px) { .cred-grid { grid-template-columns: 1fr; } }
+  .cred-field .k { font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .cred-field .v { font-size: 13px; color: var(--text); overflow-wrap: anywhere; }
+  .secret { display:flex; align-items:center; gap: 8px; }
+  .secret .val { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; letter-spacing: 0.04em; }
+  .secret button { width: 26px; height: 26px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; color: var(--text-muted); cursor: pointer; display:inline-flex; align-items:center; justify-content:center; }
+  .secret button:hover { color: var(--text); }
+  .secret button .material-symbols-outlined { font-size: 15px; }
+
+  /* Blacklist row */
+  .bl-row { display:flex; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+  .bl-row:last-child { border-bottom: 0; }
+  .bl-row .ic { width: 28px; height: 28px; border-radius: 8px; background: rgba(239,68,68,0.14); color: var(--sev-high); display:flex; align-items:center; justify-content:center; flex-shrink: 0; }
+  .bl-row .ic .material-symbols-outlined { font-size: 16px; }
+  .bl-row .url { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--text); font-weight: 600; overflow-wrap: anywhere; }
+  .bl-row .reason { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+
+  .meta-row { display:flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+  .meta-row:last-child { border-bottom: 0; }
+  .meta-row .k { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .meta-row .v { font-size: 13px; color: var(--text); text-align: right; max-width: 62%; overflow-wrap: anywhere; }
+</style>
+</head>
+<body data-page="form-requirement-detail">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1280px; margin: 0 auto;">
+
+        <a href="offsec-form-requirement.html" class="crumb" style="margin-bottom: 14px;">
+          <span class="material-symbols-outlined">arrow_back</span>
+          All forms
+        </a>
+
+        <!-- Title block -->
+        <div style="display:flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 18px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+              <span class="mono" id="fr-id" style="font-size: 12px; color: var(--text-muted); font-weight: 600;">FR-—</span>
+              <span class="pill" id="fr-status-pill"><span class="dot"></span><span id="fr-status">—</span></span>
+              <span class="mono" id="fr-app" style="font-size: 11.5px; color: var(--text-muted);">—</span>
+            </div>
+            <h1 id="fr-title" style="font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin: 0; color: var(--text); line-height: 1.25;">Loading…</h1>
+            <div id="fr-subtitle" style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">—</div>
+          </div>
+          <div style="display:flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-ghost"><span class="material-symbols-outlined">file_download</span>Export</button>
+            <a class="btn btn-soft" id="edit-link" href="offsec-form-requirement-create.html"><span class="material-symbols-outlined">edit</span>Edit</a>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <!-- Main column -->
+          <div style="display:flex; flex-direction: column; gap: 18px;">
+
+            <!-- Application Form -->
+            <div class="card section-card">
+              <div class="section-h">
+                <div class="ic"><span class="material-symbols-outlined">quiz</span></div>
+                <div class="t">Application Form</div>
+              </div>
+              <div id="qa-list"></div>
+            </div>
+
+            <!-- Requirement -->
+            <div class="card section-card">
+              <div class="section-h">
+                <div class="ic"><span class="material-symbols-outlined">vpn_key</span></div>
+                <div class="t">Requirement · Access credentials <span id="req-count" style="color: var(--text-faint); font-weight: 500;"></span></div>
+              </div>
+              <div id="req-list"></div>
+            </div>
+
+            <!-- Blacklist -->
+            <div class="card section-card">
+              <div class="section-h">
+                <div class="ic" style="background: rgba(239,68,68,0.16); color: var(--sev-high);"><span class="material-symbols-outlined">block</span></div>
+                <div class="t">Blacklist URL <span id="bl-count" style="color: var(--text-faint); font-weight: 500;"></span></div>
+              </div>
+              <div id="bl-list"></div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div style="display:flex; flex-direction: column; gap: 18px;">
+            <div class="card section-card">
+              <div class="section-h">
+                <div class="ic"><span class="material-symbols-outlined">tune</span></div>
+                <div class="t">Properties</div>
+              </div>
+              <div>
+                <div class="meta-row"><span class="k">Form ID</span><span class="v mono" id="m-id">—</span></div>
+                <div class="meta-row"><span class="k">VAPT Project</span><span class="v" id="m-project">—</span></div>
+                <div class="meta-row"><span class="k">Application</span><span class="v" id="m-app">—</span></div>
+                <div class="meta-row"><span class="k">Type</span><span class="v" id="m-type">—</span></div>
+                <div class="meta-row"><span class="k">Environment</span><span class="v" id="m-env">—</span></div>
+                <div class="meta-row"><span class="k">Credentials</span><span class="v mono" id="m-reqn">—</span></div>
+                <div class="meta-row"><span class="k">Blacklisted</span><span class="v mono" id="m-bln">—</span></div>
+                <div class="meta-row"><span class="k">Created by</span><span class="v" id="m-by">—</span></div>
+                <div class="meta-row"><span class="k">Created</span><span class="v mono" id="m-date">—</span></div>
+              </div>
+            </div>
+
+            <div class="card section-card">
+              <div class="section-h">
+                <div class="ic" style="background: rgba(245,158,11,0.16); color: var(--warn);"><span class="material-symbols-outlined">shield</span></div>
+                <div class="t">Handling note</div>
+              </div>
+              <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.6; margin: 0;">Credentials are demo placeholders. In production they are encrypted at rest and revealed only to assigned testers with an audit trail.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script src="form-requirement-data.js"></script>
+<script>
+function fmtDate(d) { return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function render() {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id') || FORMREQS[0].id;
+  const r = formReqById(id) || FORMREQS[0];
+
+  document.getElementById('fr-id').textContent = r.id;
+  document.getElementById('fr-title').textContent = r.form.appName;
+  document.getElementById('fr-subtitle').textContent = `${r.project} · ${r.application}`;
+  document.getElementById('fr-app').textContent = r.application;
+  const sp = document.getElementById('fr-status-pill');
+  sp.className = 'pill ' + FR_STATUS_PILL[r.status];
+  document.getElementById('fr-status').textContent = r.status;
+  document.getElementById('edit-link').href = `offsec-form-requirement-create.html?id=${r.id}`;
+
+  // ---- Application form Q&A (driven by schema) ----
+  const qaWrap = document.getElementById('qa-list');
+  qaWrap.innerHTML = FORM_QUESTIONS.map(def => {
+    const val = r.form[def.key];
+    if (def.dependsOn && !r.form[def.dependsOn]) return '';
+    let ans;
+    if (def.type === 'bool') {
+      ans = val
+        ? '<span class="bool-yes"><span class="material-symbols-outlined">check_circle</span>Yes</span>'
+        : '<span class="bool-no"><span class="material-symbols-outlined">cancel</span>No</span>';
+    } else if (!val) {
+      ans = '<span class="a empty">Not provided</span>';
+      return `<div class="qa"><div class="q">${esc(def.q)}</div><div class="a empty">Not provided</div></div>`;
+    } else {
+      ans = esc(val);
+    }
+    return `<div class="qa"><div class="q">${esc(def.q)}</div><div class="a">${ans}</div></div>`;
+  }).join('');
+
+  // ---- Requirement credentials ----
+  document.getElementById('req-count').textContent = `(${r.requirements.length})`;
+  const reqWrap = document.getElementById('req-list');
+  reqWrap.innerHTML = r.requirements.map((c, i) => `
+    <div class="cred">
+      <div class="cred-url"><span class="material-symbols-outlined">link</span>${esc(c.url)}</div>
+      <div class="cred-grid">
+        <div class="cred-field"><div class="k">Username</div><div class="v mono" style="font-family:'JetBrains Mono',monospace; font-size:12.5px;">${esc(c.username) || '—'}</div></div>
+        <div class="cred-field">
+          <div class="k">Password</div>
+          <div class="secret">
+            <span class="val" data-secret="${esc(c.password)}">••••••••••</span>
+            <button type="button" data-reveal title="Reveal"><span class="material-symbols-outlined">visibility</span></button>
+          </div>
+        </div>
+        <div class="cred-field" style="grid-column: 1 / -1;"><div class="k">Additional info</div><div class="v">${esc(c.info) || '—'}</div></div>
+      </div>
+    </div>
+  `).join('');
+
+  // ---- Blacklist ----
+  document.getElementById('bl-count').textContent = `(${r.blacklist.length})`;
+  const blWrap = document.getElementById('bl-list');
+  if (!r.blacklist.length) {
+    blWrap.innerHTML = `<div style="font-size: 12.5px; color: var(--text-faint); font-style: italic;">No blacklisted URLs — the entire in-scope surface may be tested.</div>`;
+  } else {
+    blWrap.innerHTML = r.blacklist.map(b => `
+      <div class="bl-row">
+        <div class="ic"><span class="material-symbols-outlined">link_off</span></div>
+        <div style="min-width:0;">
+          <div class="url">${esc(b.url)}</div>
+          <div class="reason">${esc(b.reason)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ---- Properties ----
+  document.getElementById('m-id').textContent = r.id;
+  document.getElementById('m-project').textContent = r.project;
+  document.getElementById('m-app').textContent = r.application;
+  document.getElementById('m-type').textContent = r.form.appType;
+  document.getElementById('m-env').textContent = r.form.environment;
+  document.getElementById('m-reqn').textContent = r.requirements.length;
+  document.getElementById('m-bln').textContent = r.blacklist.length;
+  document.getElementById('m-by').textContent = r.createdBy;
+  document.getElementById('m-date').textContent = fmtDate(r.createdDate);
+}
+
+// Reveal secrets
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-reveal]');
+  if (!btn) return;
+  const span = btn.parentElement.querySelector('.val');
+  const ico = btn.querySelector('.material-symbols-outlined');
+  if (span.dataset.shown === '1') {
+    span.textContent = '••••••••••'; span.dataset.shown = '0'; ico.textContent = 'visibility';
+  } else {
+    span.textContent = span.dataset.secret || '—'; span.dataset.shown = '1'; ico.textContent = 'visibility_off';
+  }
+});
+
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Application Setting — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  .settings-grid { display: grid; grid-template-columns: 232px 1fr; gap: 28px; align-items: start; }
+  @media (max-width: 880px) { .settings-grid { grid-template-columns: 1fr; gap: 18px; } }
+
+  /* Left section nav */
+  .set-nav { position: sticky; top: 0; display: flex; flex-direction: column; gap: 2px; }
+  @media (max-width: 880px) { .set-nav { position: static; flex-direction: row; flex-wrap: wrap; } }
+  .set-nav-link {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 12px; border-radius: 9px;
+    color: var(--text-muted); font-size: 13px; font-weight: 600;
+    text-decoration: none; cursor: pointer; border: 1px solid transparent;
+    transition: all 0.15s; font-family: inherit; background: transparent; text-align: left;
+  }
+  .set-nav-link:hover { background: var(--surface-2); color: var(--text); }
+  .set-nav-link.active { background: var(--surface); border-color: var(--border); color: var(--text); }
+  .set-nav-link.active .material-symbols-outlined { color: var(--primary); font-variation-settings: 'FILL' 1; }
+  .set-nav-link .material-symbols-outlined { font-size: 19px; flex-shrink: 0; color: var(--text-faint); }
+
+  .form-section { padding: 22px 24px; }
+  .form-section + .form-section { border-top: 1px solid var(--border); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 620px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .req::after { content: " *"; color: var(--primary); }
+
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 18px 24px; border-bottom: 1px solid var(--border);
+  }
+  .card-head .lead { display: flex; align-items: flex-start; gap: 12px; }
+
+  /* Input with prefix icon */
+  .input-icon-wrap { position: relative; }
+  .input-icon-wrap > .material-symbols-outlined { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 17px; pointer-events: none; }
+  .input-icon-wrap .field { padding-left: 36px; }
+  .input-icon-wrap .field.mono-input { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+
+  /* Secret field with show/hide */
+  .pwd-wrap { position: relative; }
+  .pwd-wrap .field { padding-right: 44px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; font-size: 12.5px; }
+  .pwd-wrap.with-icon .field { padding-left: 36px; }
+  .pwd-wrap > .material-symbols-outlined.lead-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 17px; pointer-events: none; }
+  .pwd-btn {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 30px; height: 30px;
+    background: transparent; border: 0; border-radius: 6px;
+    color: var(--text-muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; font-family: inherit;
+  }
+  .pwd-btn:hover { background: var(--border); color: var(--text); }
+  .pwd-btn .material-symbols-outlined { font-size: 17px; }
+
+  .field-hint { font-size: 11px; color: var(--text-faint); margin-top: 5px; }
+
+  /* Connection status chip */
+  .conn-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 600;
+    background: var(--surface-2); color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .conn-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); flex-shrink: 0; }
+  .conn-chip.ok { color: var(--accent); border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.10); }
+  .conn-chip.ok .dot { background: var(--accent); }
+  .conn-chip.err { color: var(--sev-high); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.10); }
+  .conn-chip.err .dot { background: var(--sev-high); }
+  .conn-chip.testing .dot { background: var(--info); animation: pulse 0.9s infinite; }
+  .conn-chip.testing { color: var(--info); border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.10); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  /* Toggle row */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .toggle-row .lbl-t { font-size: 13px; font-weight: 600; color: var(--text); }
+  .toggle-row .lbl-s { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .switch { position: relative; width: 38px; height: 22px; background: var(--border-strong); border-radius: 999px; cursor: pointer; transition: background 0.18s; flex-shrink: 0; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.18s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+  .switch.on { background: var(--primary); }
+  .switch.on::after { transform: translateX(16px); }
+
+  /* Save bar */
+  .save-bar {
+    position: sticky; bottom: 0; z-index: 5;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 18px; margin-top: 8px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow-popover);
+  }
+  .save-bar .saved-note { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 7px; }
+  .save-bar .saved-note .material-symbols-outlined { font-size: 16px; color: var(--accent); }
+</style>
+</head>
+<body data-page="app-setting">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1500px; margin: 0 auto;">
+
+        <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; color: var(--text);">Application Setting</h1>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 24px;">System-wide integrations for outbound email and report generation. Required fields marked with <span style="color: var(--primary)">*</span>.</p>
+
+        <div class="settings-grid">
+
+          <!-- Section nav -->
+          <nav class="set-nav" id="set-nav">
+            <button type="button" class="set-nav-link active" data-target="sec-smtp">
+              <span class="material-symbols-outlined">mail</span> Email (SMTP)
+            </button>
+            <button type="button" class="set-nav-link" data-target="sec-sysreptor">
+              <span class="material-symbols-outlined">description</span> SysReptor API
+            </button>
+          </nav>
+
+          <form id="settings-form" style="display:flex; flex-direction:column; gap:22px;">
+
+            <!-- ============ SMTP ============ -->
+            <section class="card" id="sec-smtp">
+              <div class="card-head">
+                <div class="lead">
+                  <span class="material-symbols-outlined ico-bullet ms-fill" style="margin-top:1px;">mail</span>
+                  <div>
+                    <h2 class="card-title">Email (SMTP)</h2>
+                    <p class="card-sub">Outbound mail server used for notifications, reports, and account invites.</p>
+                  </div>
+                </div>
+                <span class="conn-chip" id="smtp-status"><span class="dot"></span>Not tested</span>
+              </div>
+
+              <div class="form-section">
+                <div class="form-grid">
+                  <div class="full">
+                    <label class="field-label req" for="smtp-host">SMTP Server URL</label>
+                    <div class="input-icon-wrap">
+                      <span class="material-symbols-outlined">dns</span>
+                      <input id="smtp-host" class="field mono-input" type="text" placeholder="smtp.offensivesec.id" autocomplete="off" required/>
+                    </div>
+                    <div class="field-hint">Hostname or IP of the mail server — no <code style="font-family:JetBrains Mono,monospace">smtp://</code> prefix.</div>
+                  </div>
+
+                  <div>
+                    <label class="field-label req" for="smtp-port">Port</label>
+                    <div class="input-icon-wrap">
+                      <span class="material-symbols-outlined">tag</span>
+                      <input id="smtp-port" class="field mono-input" type="number" min="1" max="65535" placeholder="587" required/>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="field-label" for="smtp-enc">Encryption</label>
+                    <select id="smtp-enc" class="field">
+                      <option value="starttls">STARTTLS</option>
+                      <option value="ssl">SSL / TLS</option>
+                      <option value="none">None</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="field-label req" for="smtp-user">Username</label>
+                    <div class="input-icon-wrap">
+                      <span class="material-symbols-outlined">person</span>
+                      <input id="smtp-user" class="field mono-input" type="text" placeholder="noreply@offensivesec.id" autocomplete="off" required/>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="field-label req" for="smtp-pass">Password</label>
+                    <div class="pwd-wrap with-icon">
+                      <span class="material-symbols-outlined lead-ico">key</span>
+                      <input id="smtp-pass" class="field" type="password" placeholder="••••••••••••" autocomplete="new-password" required/>
+                      <button type="button" class="pwd-btn" data-toggle="smtp-pass" title="Show password"><span class="material-symbols-outlined">visibility</span></button>
+                    </div>
+                  </div>
+
+                  <div class="full">
+                    <label class="field-label" for="smtp-from">From address</label>
+                    <div class="input-icon-wrap">
+                      <span class="material-symbols-outlined">alternate_email</span>
+                      <input id="smtp-from" class="field mono-input" type="email" placeholder="Offensive Sec &lt;noreply@offensivesec.id&gt;"/>
+                    </div>
+                    <div class="field-hint">Address shown to recipients. Defaults to the username if left empty.</div>
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:10px; margin-top:18px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-soft" data-test="smtp">
+                    <span class="material-symbols-outlined">wifi_tethering</span> Test connection
+                  </button>
+                  <span class="field-hint" style="margin:0;">Sends a probe to verify host, port &amp; credentials.</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- ============ SysReptor ============ -->
+            <section class="card" id="sec-sysreptor">
+              <div class="card-head">
+                <div class="lead">
+                  <span class="material-symbols-outlined ico-bullet ms-fill" style="margin-top:1px;">description</span>
+                  <div>
+                    <h2 class="card-title">SysReptor API</h2>
+                    <p class="card-sub">Report-generation backend used to render and export VAPT deliverables.</p>
+                  </div>
+                </div>
+                <span class="conn-chip" id="sysr-status"><span class="dot"></span>Not tested</span>
+              </div>
+
+              <div class="form-section">
+                <div class="form-grid">
+                  <div>
+                    <label class="field-label req" for="sysr-url">SysReptor URL</label>
+                    <div class="input-icon-wrap">
+                      <span class="material-symbols-outlined">link</span>
+                      <input id="sysr-url" class="field mono-input" type="text" placeholder="https://reptor.offensivesec.id" autocomplete="off" required/>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="field-label req" for="sysr-port">Port</label>
+                    <div class="input-icon-wrap">
+                      <span class="material-symbols-outlined">tag</span>
+                      <input id="sysr-port" class="field mono-input" type="number" min="1" max="65535" placeholder="443" required/>
+                    </div>
+                  </div>
+
+                  <div class="full">
+                    <label class="field-label req" for="sysr-token">API Token</label>
+                    <div class="pwd-wrap with-icon">
+                      <span class="material-symbols-outlined lead-ico">vpn_key</span>
+                      <input id="sysr-token" class="field" type="password" placeholder="sysreptor_pat_••••••••••••••••••••" autocomplete="off" required/>
+                      <button type="button" class="pwd-btn" data-toggle="sysr-token" title="Show token"><span class="material-symbols-outlined">visibility</span></button>
+                    </div>
+                    <div class="field-hint">Personal access token from SysReptor → User settings → API tokens. Stored encrypted.</div>
+                  </div>
+
+                  <div class="full">
+                    <div class="toggle-row">
+                      <div>
+                        <div class="lbl-t">Verify SSL certificate</div>
+                        <div class="lbl-s">Disable only for self-signed certificates on internal hosts</div>
+                      </div>
+                      <div class="switch on" id="sysr-ssl"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:10px; margin-top:18px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-soft" data-test="sysr">
+                    <span class="material-symbols-outlined">wifi_tethering</span> Test connection
+                  </button>
+                  <span class="field-hint" style="margin:0;">Calls the SysReptor health endpoint with your token.</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Save bar -->
+            <div class="save-bar">
+              <span class="saved-note" id="saved-note"></span>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn btn-ghost" id="reset-btn">
+                  <span class="material-symbols-outlined">restart_alt</span> Reset
+                </button>
+                <button type="submit" class="btn btn-primary" id="save-btn">
+                  <span class="material-symbols-outlined">save</span> Save changes
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script>
+const LS_KEY = 'ofsec.appsettings';
+
+const FIELDS = ['smtp-host','smtp-port','smtp-enc','smtp-user','smtp-pass','smtp-from','sysr-url','sysr-port','sysr-token'];
+
+// ===== Show / hide secrets =====
+document.querySelectorAll('.pwd-btn[data-toggle]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const f = document.getElementById(btn.dataset.toggle);
+    const ico = btn.querySelector('.material-symbols-outlined');
+    if (f.type === 'password') { f.type = 'text'; ico.textContent = 'visibility_off'; }
+    else { f.type = 'password'; ico.textContent = 'visibility'; }
+  });
+});
+
+// ===== SSL toggle =====
+const sslSwitch = document.getElementById('sysr-ssl');
+sslSwitch.addEventListener('click', () => sslSwitch.classList.toggle('on'));
+
+// ===== Section nav (scroll + active state) =====
+const navLinks = [...document.querySelectorAll('.set-nav-link')];
+navLinks.forEach(l => l.addEventListener('click', () => {
+  const el = document.getElementById(l.dataset.target);
+  if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}));
+const scroller = document.querySelector('main');
+const sections = navLinks.map(l => document.getElementById(l.dataset.target));
+scroller.addEventListener('scroll', () => {
+  let activeIdx = 0;
+  sections.forEach((s, i) => { if (s.getBoundingClientRect().top < 180) activeIdx = i; });
+  navLinks.forEach((l, i) => l.classList.toggle('active', i === activeIdx));
+});
+
+// ===== Test connection (demo) =====
+function setStatus(id, state, label) {
+  const chip = document.getElementById(id);
+  chip.className = 'conn-chip' + (state ? ' ' + state : '');
+  chip.innerHTML = `<span class="dot"></span>${label}`;
+}
+document.querySelectorAll('[data-test]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const which = btn.dataset.test;
+    const statusId = which === 'smtp' ? 'smtp-status' : 'sysr-status';
+    const reqIds = which === 'smtp'
+      ? ['smtp-host','smtp-port','smtp-user','smtp-pass']
+      : ['sysr-url','sysr-port','sysr-token'];
+    const missing = reqIds.filter(id => !document.getElementById(id).value.trim());
+    if (missing.length) {
+      setStatus(statusId, 'err', 'Fill required fields');
+      document.getElementById(missing[0]).focus();
+      return;
+    }
+    setStatus(statusId, 'testing', 'Testing…');
+    btn.disabled = true;
+    setTimeout(() => {
+      setStatus(statusId, 'ok', which === 'smtp' ? 'Connected · 220 OK' : 'Connected · v2 API');
+      btn.disabled = false;
+    }, 1300);
+  });
+});
+
+// ===== Persistence =====
+function collect() {
+  const data = {};
+  FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
+  data['sysr-ssl'] = sslSwitch.classList.contains('on');
+  return data;
+}
+function load() {
+  let data = {};
+  try { data = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch (e) {}
+  FIELDS.forEach(id => { if (data[id] != null) document.getElementById(id).value = data[id]; });
+  if (typeof data['sysr-ssl'] === 'boolean') sslSwitch.classList.toggle('on', data['sysr-ssl']);
+}
+load();
+
+const savedNote = document.getElementById('saved-note');
+document.getElementById('settings-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  try { localStorage.setItem(LS_KEY, JSON.stringify(collect())); } catch (err) {}
+  const now = new Date();
+  const t = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  savedNote.innerHTML = `<span class="material-symbols-outlined">check_circle</span>Settings saved at ${t}`;
+  setTimeout(() => { savedNote.innerHTML = ''; }, 4000);
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (!confirm('Reset all settings on this page to the last saved values?')) return;
+  FIELDS.forEach(id => { document.getElementById(id).value = ''; });
+  sslSwitch.classList.add('on');
+  setStatus('smtp-status', '', 'Not tested');
+  setStatus('sysr-status', '', 'Not tested');
+  load();
+});
+</script>
+</body>
+</html>

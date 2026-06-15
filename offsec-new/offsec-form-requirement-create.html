@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>New Form &amp; Requirement — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  .form-section { padding: 22px 24px; }
+  .form-section + .form-section { border-top: 1px solid var(--border); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 720px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .req::after { content: " *"; color: var(--primary); }
+  .field-hint { font-size: 11px; color: var(--text-faint); margin-top: 5px; }
+
+  /* Yes/No segmented control */
+  .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 8px; padding: 3px; gap: 3px; }
+  .seg button { border: 0; background: transparent; color: var(--text-muted); font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .seg button .material-symbols-outlined { font-size: 16px; }
+  .seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+  .seg button.on[data-val="yes"] { color: var(--accent); }
+  .seg button.on[data-val="no"]  { color: var(--text); }
+
+  /* Input with prefix icon */
+  .input-icon-wrap { position: relative; }
+  .input-icon-wrap > .material-symbols-outlined { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 17px; pointer-events: none; }
+  .input-icon-wrap .field { padding-left: 36px; }
+  .input-icon-wrap .field.mono-input { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+
+  /* Secret field show/hide */
+  .pwd-wrap { position: relative; }
+  .pwd-wrap .field { padding-right: 40px; padding-left: 36px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+  .pwd-wrap > .material-symbols-outlined.lead-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 17px; pointer-events: none; }
+  .pwd-btn { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; background: transparent; border: 0; border-radius: 6px; color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .pwd-btn:hover { background: var(--border); color: var(--text); }
+  .pwd-btn .material-symbols-outlined { font-size: 16px; }
+
+  /* Repeatable item card */
+  .repeat-item { position: relative; padding: 16px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; }
+  .repeat-item + .repeat-item { margin-top: 12px; }
+  .repeat-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .repeat-head .idx { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .repeat-head .idx .n { width: 22px; height: 22px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text); }
+  .remove-btn { width: 30px; height: 30px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .remove-btn:hover { color: var(--primary); border-color: rgba(220,38,38,0.4); background: var(--primary-soft-2); }
+  .remove-btn .material-symbols-outlined { font-size: 17px; }
+
+  .add-row { display: inline-flex; align-items: center; gap: 7px; margin-top: 14px; padding: 9px 14px; border: 1.5px dashed var(--border-strong); background: transparent; border-radius: 10px; color: var(--text-muted); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .add-row:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft-2); }
+  .add-row .material-symbols-outlined { font-size: 18px; }
+
+  /* Sticky section nav */
+  .fr-layout { display: grid; grid-template-columns: 220px 1fr; gap: 26px; align-items: start; }
+  @media (max-width: 920px) { .fr-layout { grid-template-columns: 1fr; } }
+  .fr-nav { position: sticky; top: 0; display: flex; flex-direction: column; gap: 2px; }
+  @media (max-width: 920px) { .fr-nav { position: static; flex-direction: row; flex-wrap: wrap; } }
+  .fr-nav a { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 9px; color: var(--text-muted); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid transparent; transition: all 0.15s; }
+  .fr-nav a:hover { background: var(--surface-2); color: var(--text); }
+  .fr-nav a.active { background: var(--surface); border-color: var(--border); color: var(--text); }
+  .fr-nav a.active .material-symbols-outlined { color: var(--primary); font-variation-settings: 'FILL' 1; }
+  .fr-nav a .material-symbols-outlined { font-size: 19px; color: var(--text-faint); }
+  .fr-nav a .badge { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); border-radius: 999px; padding: 0 7px; }
+</style>
+</head>
+<body data-page="form-requirement-create">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1500px; margin: 0 auto;">
+
+        <a href="offsec-form-requirement.html" style="display:inline-flex; align-items:center; gap: 6px; font-size: 12.5px; color: var(--text-muted); text-decoration: none; margin-bottom: 14px;">
+          <span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>
+          All forms
+        </a>
+
+        <h1 id="page-h" style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; color: var(--text);">New form &amp; requirement</h1>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 24px;">Capture the application details and the access the team needs to start testing. Required fields marked with <span style="color: var(--primary)">*</span>.</p>
+
+        <div class="fr-layout">
+          <nav class="fr-nav" id="fr-nav">
+            <a href="#sec-form" class="active"><span class="material-symbols-outlined">quiz</span>Application Form</a>
+            <a href="#sec-req"><span class="material-symbols-outlined">vpn_key</span>Requirement<span class="badge" id="nav-req-count">1</span></a>
+            <a href="#sec-blacklist"><span class="material-symbols-outlined">block</span>Blacklist URL<span class="badge" id="nav-bl-count">0</span></a>
+          </nav>
+
+          <form id="fr-form" style="display:flex; flex-direction:column; gap: 22px;">
+
+            <!-- ============ 1. Application Form ============ -->
+            <section class="card" id="sec-form" style="padding:0;">
+              <div class="form-section">
+                <div class="card-title" style="margin-bottom: 4px;">
+                  <span class="material-symbols-outlined ico-bullet ms-fill">quiz</span>
+                  Application Form
+                </div>
+                <p class="card-sub" style="margin-left: 34px; margin-bottom: 20px;">Tell us about the application under assessment.</p>
+
+                <div class="form-grid">
+                  <div class="full">
+                    <label class="field-label req" for="q-appName">What is the name of the application?</label>
+                    <input id="q-appName" class="field" type="text" placeholder="e.g. MMKSI Microsite" required/>
+                  </div>
+
+                  <div class="full">
+                    <label class="field-label req" for="q-reason">What is the reason for testing?</label>
+                    <textarea id="q-reason" class="field" placeholder="e.g. Annual security assessment before public launch, regulatory requirement, post-incident review…" required></textarea>
+                  </div>
+
+                  <div>
+                    <label class="field-label req" for="q-appType">What is the type of the application?</label>
+                    <select id="q-appType" class="field" required>
+                      <option value="">Select type…</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="field-label req" for="q-environment">Which environment will be tested?</label>
+                    <select id="q-environment" class="field" required>
+                      <option value="">Select environment…</option>
+                    </select>
+                  </div>
+
+                  <div class="full">
+                    <label class="field-label">Are there any third-party integrations or dependencies?</label>
+                    <div class="seg" id="seg-thirdparty" style="margin-top: 4px;">
+                      <button type="button" data-val="yes"><span class="material-symbols-outlined">check</span>Yes</button>
+                      <button type="button" data-val="no" class="on"><span class="material-symbols-outlined">close</span>No</button>
+                    </div>
+                  </div>
+                  <div class="full" id="thirdparty-detail" style="display:none;">
+                    <label class="field-label" for="q-thirdParty">List the integrations / dependencies in scope.</label>
+                    <textarea id="q-thirdParty" class="field" placeholder="e.g. Payment gateway, Maps API, SSO / identity provider, push notification service…"></textarea>
+                  </div>
+
+                  <div>
+                    <label class="field-label" for="q-userRoles">What user roles exist in the application?</label>
+                    <input id="q-userRoles" class="field" type="text" placeholder="e.g. Guest, User, Admin"/>
+                  </div>
+                  <div>
+                    <label class="field-label" for="q-application">Linked application (master data)</label>
+                    <select id="q-application" class="field">
+                      <option value="">Select application…</option>
+                    </select>
+                  </div>
+
+                  <div class="full">
+                    <label class="field-label" for="q-sensitiveData">What sensitive data does the application handle?</label>
+                    <textarea id="q-sensitiveData" class="field" placeholder="e.g. PII, payment data, health records, internal documents…"></textarea>
+                  </div>
+
+                  <div class="full">
+                    <label class="field-label" for="q-notes">Any additional information or testing constraints?</label>
+                    <textarea id="q-notes" class="field" placeholder="e.g. Preferred testing window, rate-limit concerns, shared environments…"></textarea>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ============ 2. Requirement ============ -->
+            <section class="card" id="sec-req" style="padding:0;">
+              <div class="form-section">
+                <div class="card-title" style="margin-bottom: 4px;">
+                  <span class="material-symbols-outlined ico-bullet ms-fill">vpn_key</span>
+                  Requirement
+                </div>
+                <p class="card-sub" style="margin-left: 34px; margin-bottom: 20px;">The project and the access credentials the testers will use.</p>
+
+                <div style="max-width: 520px; margin-bottom: 20px;">
+                  <label class="field-label req" for="r-project">VAPT Project</label>
+                  <select id="r-project" class="field" required>
+                    <option value="">Select VAPT project…</option>
+                  </select>
+                </div>
+
+                <label class="field-label">Access credentials</label>
+                <p class="field-hint" style="margin: 0 0 12px;">Add one set per role or endpoint the team should test with. URL, username and password can be repeated.</p>
+                <div id="req-list"></div>
+                <button type="button" class="add-row" id="add-req"><span class="material-symbols-outlined">add</span>Add credential set</button>
+              </div>
+            </section>
+
+            <!-- ============ 3. Blacklist URL ============ -->
+            <section class="card" id="sec-blacklist" style="padding:0;">
+              <div class="form-section">
+                <div class="card-title" style="margin-bottom: 4px;">
+                  <span class="material-symbols-outlined ico-bullet ms-fill" style="background: rgba(239,68,68,0.16); color: var(--sev-high);">block</span>
+                  Blacklist URL
+                </div>
+                <p class="card-sub" style="margin-left: 34px; margin-bottom: 20px;">URLs or endpoints that must <strong>not</strong> be tested. Each needs a reason.</p>
+
+                <div id="bl-list"></div>
+                <button type="button" class="add-row" id="add-bl"><span class="material-symbols-outlined">add</span>Add blacklist URL</button>
+                <div id="bl-empty" class="field-hint" style="margin-top: 12px;">No blacklisted URLs yet — the whole in-scope surface is fair game.</div>
+              </div>
+            </section>
+
+            <!-- Actions -->
+            <div style="position: sticky; bottom: 0; z-index: 5; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; box-shadow: var(--shadow-popover);">
+              <a class="btn btn-ghost" href="offsec-form-requirement.html"><span class="material-symbols-outlined">close</span>Cancel</a>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-soft" type="button" id="save-draft"><span class="material-symbols-outlined">save</span>Save as draft</button>
+                <button class="btn btn-primary" type="submit"><span class="material-symbols-outlined">send</span>Submit form</button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script src="form-requirement-data.js"></script>
+<script>
+// ===== Populate selects =====
+function fillSelect(id, items) {
+  const sel = document.getElementById(id);
+  items.forEach(v => { const o = document.createElement('option'); o.textContent = v; sel.appendChild(o); });
+}
+fillSelect('q-appType', APP_TYPES);
+fillSelect('q-environment', ENVIRONMENTS);
+fillSelect('r-project', VAPT_PROJECTS);
+fillSelect('q-application', [
+  'BSI - Infra','MMKSI - Microsite','KTB - HRIS','MMKSI - VTS','KTB - D-Net Interface',
+  'BSI - Timesheet','KTB - FDMA CMS Sales','KTB - Karoseri Portal','MMKSI - D-Net Interface',
+  'KTB - Supplier Portal','KTB - Sparepart Catalog','KTB - Microsite Career','KTB - Visit',
+]);
+
+// ===== Third-party Yes/No =====
+const segTP = document.getElementById('seg-thirdparty');
+const tpDetail = document.getElementById('thirdparty-detail');
+let hasThirdParty = false;
+segTP.querySelectorAll('button').forEach(b => {
+  b.addEventListener('click', () => {
+    segTP.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    hasThirdParty = b.dataset.val === 'yes';
+    tpDetail.style.display = hasThirdParty ? '' : 'none';
+  });
+});
+
+// ===== Repeatable: credential sets =====
+const reqList = document.getElementById('req-list');
+function reqRowHtml(data = {}) {
+  return `
+    <div class="repeat-item" data-req>
+      <div class="repeat-head">
+        <span class="idx"><span class="n"></span>Credential set</span>
+        <button type="button" class="remove-btn" data-remove title="Remove"><span class="material-symbols-outlined">delete</span></button>
+      </div>
+      <div class="form-grid">
+        <div class="full">
+          <label class="field-label req">URL</label>
+          <div class="input-icon-wrap">
+            <span class="material-symbols-outlined">link</span>
+            <input class="field mono-input" data-f="url" type="text" placeholder="https://staging.example.com" value="${data.url || ''}"/>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Username</label>
+          <div class="input-icon-wrap">
+            <span class="material-symbols-outlined">person</span>
+            <input class="field mono-input" data-f="username" type="text" placeholder="pentest_user" value="${data.username || ''}"/>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Password</label>
+          <div class="pwd-wrap">
+            <span class="material-symbols-outlined lead-ico">key</span>
+            <input class="field" data-f="password" type="password" placeholder="••••••••" value="${data.password || ''}"/>
+            <button type="button" class="pwd-btn" data-toggle title="Show"><span class="material-symbols-outlined">visibility</span></button>
+          </div>
+        </div>
+        <div class="full">
+          <label class="field-label">Additional info</label>
+          <input class="field" data-f="info" type="text" placeholder="e.g. role / scope / notes about this account" value="${data.info || ''}"/>
+        </div>
+      </div>
+    </div>`;
+}
+function addReq(data) {
+  reqList.insertAdjacentHTML('beforeend', reqRowHtml(data));
+  renumber();
+}
+
+// ===== Repeatable: blacklist =====
+const blList = document.getElementById('bl-list');
+function blRowHtml(data = {}) {
+  return `
+    <div class="repeat-item" data-bl>
+      <div class="repeat-head">
+        <span class="idx"><span class="n"></span>Blacklisted URL</span>
+        <button type="button" class="remove-btn" data-remove title="Remove"><span class="material-symbols-outlined">delete</span></button>
+      </div>
+      <div class="form-grid">
+        <div class="full">
+          <label class="field-label req">URL</label>
+          <div class="input-icon-wrap">
+            <span class="material-symbols-outlined">link_off</span>
+            <input class="field mono-input" data-f="url" type="text" placeholder="https://example.com/dangerous-endpoint" value="${data.url || ''}"/>
+          </div>
+        </div>
+        <div class="full">
+          <label class="field-label req">Reason</label>
+          <input class="field" data-f="reason" type="text" placeholder="Why must this be excluded? e.g. triggers live payments / sends real email" value="${data.reason || ''}"/>
+        </div>
+      </div>
+    </div>`;
+}
+function addBl(data) {
+  blList.insertAdjacentHTML('beforeend', blRowHtml(data));
+  renumber();
+}
+
+// ===== Renumber + counts + remove =====
+function renumber() {
+  reqList.querySelectorAll('[data-req] .idx .n').forEach((n, i) => n.textContent = i + 1);
+  blList.querySelectorAll('[data-bl] .idx .n').forEach((n, i) => n.textContent = i + 1);
+  const reqN = reqList.querySelectorAll('[data-req]').length;
+  const blN = blList.querySelectorAll('[data-bl]').length;
+  document.getElementById('nav-req-count').textContent = reqN;
+  document.getElementById('nav-bl-count').textContent = blN;
+  document.getElementById('bl-empty').style.display = blN ? 'none' : '';
+}
+
+document.getElementById('add-req').addEventListener('click', () => addReq());
+document.getElementById('add-bl').addEventListener('click', () => addBl());
+
+// Delegated: remove + show/hide password
+document.addEventListener('click', (e) => {
+  const rm = e.target.closest('[data-remove]');
+  if (rm) {
+    const item = rm.closest('.repeat-item');
+    const isReq = item.hasAttribute('data-req');
+    if (isReq && reqList.querySelectorAll('[data-req]').length === 1) {
+      alert('At least one credential set is required.');
+      return;
+    }
+    item.remove();
+    renumber();
+    return;
+  }
+  const tg = e.target.closest('[data-toggle]');
+  if (tg) {
+    const f = tg.closest('.pwd-wrap').querySelector('input');
+    const ico = tg.querySelector('.material-symbols-outlined');
+    if (f.type === 'password') { f.type = 'text'; ico.textContent = 'visibility_off'; }
+    else { f.type = 'password'; ico.textContent = 'visibility'; }
+  }
+});
+
+// Seed one credential row
+addReq();
+
+// ===== Section nav active state =====
+const navAnchors = [...document.querySelectorAll('.fr-nav a')];
+const scroller = document.querySelector('main');
+navAnchors.forEach(a => a.addEventListener('click', (e) => {
+  e.preventDefault();
+  document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+const frSections = navAnchors.map(a => document.querySelector(a.getAttribute('href')));
+scroller.addEventListener('scroll', () => {
+  let idx = 0;
+  frSections.forEach((s, i) => { if (s.getBoundingClientRect().top < 200) idx = i; });
+  navAnchors.forEach((a, i) => a.classList.toggle('active', i === idx));
+});
+
+// ===== Collect + submit =====
+function collect() {
+  const form = {
+    appName: document.getElementById('q-appName').value.trim(),
+    reason: document.getElementById('q-reason').value.trim(),
+    appType: document.getElementById('q-appType').value,
+    hasThirdParty,
+    thirdParty: hasThirdParty ? document.getElementById('q-thirdParty').value.trim() : '',
+    userRoles: document.getElementById('q-userRoles').value.trim(),
+    environment: document.getElementById('q-environment').value,
+    sensitiveData: document.getElementById('q-sensitiveData').value.trim(),
+    notes: document.getElementById('q-notes').value.trim(),
+    application: document.getElementById('q-application').value,
+  };
+  const requirements = [...reqList.querySelectorAll('[data-req]')].map(item => {
+    const g = (f) => item.querySelector(`[data-f="${f}"]`).value.trim();
+    return { url: g('url'), username: g('username'), password: g('password'), info: g('info') };
+  });
+  const blacklist = [...blList.querySelectorAll('[data-bl]')].map(item => {
+    const g = (f) => item.querySelector(`[data-f="${f}"]`).value.trim();
+    return { url: g('url'), reason: g('reason') };
+  });
+  return { project: document.getElementById('r-project').value, form, requirements, blacklist };
+}
+
+document.getElementById('fr-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const data = collect();
+  if (!data.project) { alert('Please select a VAPT project.'); return; }
+  if (!data.requirements[0].url) { alert('Please provide at least one access URL.'); return; }
+  const badBl = data.blacklist.find(b => b.url && !b.reason);
+  if (badBl) { alert('Every blacklisted URL needs a reason.'); return; }
+  alert('Form & requirement submitted (demo)\n\n' + JSON.stringify(data, null, 2));
+  window.location.href = 'offsec-form-requirement.html';
+});
+document.getElementById('save-draft').addEventListener('click', () => alert('Saved as draft (demo).'));
+</script>
+</body>
+</html>

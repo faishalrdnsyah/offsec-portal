@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offensive Security Web Portal</title>
+  <style>
+    :root {
+      --bg-primary: #0b1220;
+      --bg-secondary: #111c2e;
+      --bg-card: #18243a;
+      --bg-nav: #0a0e14;
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-red: #dc2626;
+      --accent-red-dim: #b91c1c;
+      --accent-orange: #f59e0b;
+      --accent-green: #10b981;
+      --accent-blue: #3b82f6;
+      --border: #1f2d44;
+      --glow-red: rgba(220, 38, 38, 0.15);
+      --glow-green: rgba(16, 185, 129, 0.12);
+      --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+      --nav-width: 240px;
+      --transition: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    /* Layout */
+    .app {
+      display: grid;
+      grid-template-columns: var(--nav-width) 1fr;
+      height: 100vh;
+    }
+
+    /* Chapter Nav */
+    .chapter-nav {
+      background: var(--bg-nav);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .nav-brand {
+      padding: 0 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+
+    .nav-brand .logo {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent-red);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+    }
+
+    .nav-brand h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      line-height: 1.35;
+      color: var(--text-secondary);
+    }
+
+    .nav-chapters {
+      list-style: none;
+      flex: 1;
+    }
+
+    .nav-chapters li {
+      padding: 0.65rem 1.25rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .nav-chapters li:hover {
+      color: var(--text-secondary);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .nav-chapters li.active {
+      color: var(--text-primary);
+      border-left-color: var(--accent-red);
+      background: var(--glow-red);
+      font-weight: 600;
+    }
+
+    .nav-chapters li .chapter-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent-red);
+      opacity: 0.7;
+      min-width: 1.2rem;
+    }
+
+    .nav-chapters li.active .chapter-num { opacity: 1; }
+
+    .nav-hint {
+      padding: 1rem 1.25rem;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      line-height: 1.6;
+    }
+
+    .nav-hint kbd {
+      font-family: var(--font-mono);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.65rem;
+    }
+
+    /* Main Area */
+    .main {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .slide-counter .current {
+      color: var(--accent-red);
+      font-weight: 700;
+    }
+
+    .slide-topbar {
+      position: absolute;
+      top: 1.1rem;
+      right: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      z-index: 25;
+    }
+
+    .slide-brand-text {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent-red);
+      transition: width var(--transition);
+      z-index: 20;
+    }
+
+    .slides-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 4.5rem 4rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      transform: translateX(40px);
+      transition: opacity var(--transition), transform var(--transition);
+      pointer-events: none;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .slide.exit-left {
+      opacity: 0;
+      transform: translateX(-40px);
+    }
+
+    /* Typography */
+    .slide-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-red);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .slide-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.25rem;
+    }
+
+    .slide-subtitle {
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      color: var(--text-secondary);
+      line-height: 1.55;
+      max-width: 52rem;
+    }
+
+    .slide-content {
+      margin-top: 2rem;
+      max-width: 56rem;
+    }
+
+    /* Title Slide */
+    .title-slide {
+      text-align: left;
+    }
+
+    .title-slide .hero-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1.5rem;
+    }
+
+    .title-slide h1 {
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .title-slide h1 span {
+      color: var(--accent-red);
+    }
+
+    .title-slide .tagline {
+      font-size: clamp(1rem, 1.6vw, 1.2rem);
+      color: var(--text-secondary);
+      max-width: 36rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .title-meta {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .meta-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Cards */
+    .card-grid {
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .card-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .card-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .card-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      transition: border-color 0.25s;
+    }
+
+    .card:hover { border-color: var(--accent-red-dim); }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .card-icon.red { background: var(--glow-red); color: var(--accent-red); }
+    .card-icon.orange { background: rgba(244,162,97,0.12); color: var(--accent-orange); }
+    .card-icon.green { background: var(--glow-green); color: var(--accent-green); }
+    .card-icon.blue { background: rgba(76,201,240,0.12); color: var(--accent-blue); }
+
+    .card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .card .card-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent-red);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Problem visual */
+    .problem-visual {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .scattered-docs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      max-width: 280px;
+    }
+
+    .doc-chip {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.4rem 0.7rem;
+      background: var(--bg-secondary);
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      transform: rotate(var(--rot, 0deg));
+    }
+
+    .arrow-connector {
+      font-size: 1.5rem;
+      color: var(--accent-red);
+    }
+
+    .problem-result {
+      background: var(--glow-red);
+      border: 1px solid var(--accent-red-dim);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-size: 0.9rem;
+      color: var(--accent-red);
+      font-weight: 600;
+    }
+
+    /* Approval chain diagram */
+    .approval-chain {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .chain-node {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .chain-node .role {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent-red);
+      margin-bottom: 0.25rem;
+    }
+
+    .chain-node .label {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .chain-arrow {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      padding: 0 0.5rem;
+    }
+
+    /* Status tracker */
+    .status-tracker {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .status-pill {
+      flex: 1;
+      text-align: center;
+      padding: 1.25rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .status-pill .count {
+      font-size: 2rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      margin-bottom: 0.25rem;
+    }
+
+    .status-pill .label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .status-pill.open { border-color: var(--accent-red); }
+    .status-pill.open .count { color: var(--accent-red); }
+    .status-pill.progress { border-color: var(--accent-orange); }
+    .status-pill.progress .count { color: var(--accent-orange); }
+    .status-pill.closed { border-color: var(--accent-green); }
+    .status-pill.closed .count { color: var(--accent-green); }
+
+    /* Checklist phases */
+    .phase-steps {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 2rem;
+    }
+
+    .phase-step {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .phase-step::after {
+      content: '→';
+      position: absolute;
+      right: -0.65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      z-index: 1;
+    }
+
+    .phase-step:last-child::after { display: none; }
+
+    .phase-step .step-icon {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .phase-step .step-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .phase-step .step-check {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--accent-green);
+      margin-top: 0.35rem;
+    }
+
+    /* Outcomes */
+    .outcome-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .outcome-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+
+    .outcome-num {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent-red);
+      line-height: 1;
+      min-width: 2rem;
+    }
+
+    .outcome-item h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .outcome-item p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Timeline */
+    .timeline {
+      margin-top: 2rem;
+      position: relative;
+    }
+
+    .timeline-track {
+      display: flex;
+      gap: 0;
+      position: relative;
+    }
+
+    .timeline-track::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: 5%;
+      right: 5%;
+      height: 3px;
+      background: var(--border);
+      z-index: 0;
+    }
+
+    .timeline-phase {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      padding: 0 0.5rem;
+    }
+
+    .timeline-dot {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 3px solid var(--border);
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.3s;
+    }
+
+    .timeline-phase.active .timeline-dot,
+    .timeline-phase:hover .timeline-dot {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+      background: var(--glow-red);
+    }
+
+    .timeline-phase h4 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .timeline-phase .dates {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-orange);
+      margin-bottom: 0.5rem;
+    }
+
+    .timeline-phase p {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* Before/After */
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1.5rem;
+      align-items: center;
+      margin-top: 2rem;
+    }
+
+    .compare-box {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .compare-box.before { border-color: var(--accent-red-dim); }
+    .compare-box.after { border-color: var(--accent-green); }
+
+    .compare-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .compare-box.before .compare-label { color: var(--accent-red); }
+    .compare-box.after .compare-label { color: var(--accent-green); }
+
+    .compare-box ul {
+      list-style: none;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .compare-box ul li::before {
+      content: '•';
+      margin-right: 0.5rem;
+    }
+
+    .compare-box.before ul li::before { color: var(--accent-red); }
+    .compare-box.after ul li::before { color: var(--accent-green); }
+
+    .compare-arrow {
+      font-size: 2rem;
+      color: var(--accent-orange);
+    }
+
+    /* Engagement types */
+    .engagement-tags {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    .eng-tag {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+    }
+
+    .eng-tag.highlight {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+      background: var(--glow-red);
+    }
+
+    /* Closing */
+    .closing-stats {
+      display: flex;
+      gap: 2.5rem;
+      margin-top: 2.5rem;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat .num {
+      font-size: 2.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--accent-red);
+    }
+
+    .stat .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Fullscreen */
+    .fullscreen-btn {
+      position: absolute;
+      bottom: 1.25rem;
+      right: 1.5rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 20;
+      transition: all 0.2s;
+    }
+
+    .fullscreen-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--accent-red);
+    }
+
+    /* Portal modules grid */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .module-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .module-item .mod-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--glow-red);
+      color: var(--accent-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .module-item h4 {
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+    }
+
+    .module-item p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .module-item.sub {
+      border-style: dashed;
+      opacity: 0.85;
+    }
+
+    .module-link {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .module-link .module-item {
+      cursor: pointer;
+      transition: border-color 0.25s, transform 0.15s;
+    }
+
+    .module-link:hover .module-item {
+      border-color: var(--accent-red-dim);
+      transform: translateY(-2px);
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .card-grid.cols-3, .card-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+      .outcome-list { grid-template-columns: 1fr; }
+      .module-grid { grid-template-columns: repeat(2, 1fr); }
+      .slide { padding: 4rem 2.5rem 2rem; }
+      .slide-brand-text { font-size: 0.65rem; }
+    }
+
+    @media (max-width: 800px) {
+      :root { --nav-width: 0px; }
+      .chapter-nav { display: none; }
+      .app { grid-template-columns: 1fr; }
+      .card-grid.cols-2, .card-grid.cols-3, .card-grid.cols-4 { grid-template-columns: 1fr; }
+      .compare-row { grid-template-columns: 1fr; }
+      .compare-arrow { text-align: center; transform: rotate(90deg); }
+      .timeline-track { flex-direction: column; gap: 1.5rem; }
+      .timeline-track::before { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav class="chapter-nav" aria-label="Chapter navigation">
+      <div class="nav-brand">
+        <div class="logo">// OFFSEC PORTAL</div>
+        <h2>Offensive Sec Portal v2.4</h2>
+      </div>
+      <ul class="nav-chapters" id="chapterNav"></ul>
+      <div class="nav-hint">
+        <kbd>←</kbd> <kbd>→</kbd> navigate<br>
+        <kbd>F</kbd> fullscreen
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="progress-bar" id="progressBar"></div>
+      <div class="slide-topbar">
+        <div class="slide-counter" id="slideCounter"><span class="current">1</span>/14</div>
+        <div class="slide-brand-text">PT BERLIAN SISTEM INFORMASI</div>
+      </div>
+      <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle fullscreen">⛶ FULLSCREEN</button>
+
+      <div class="slides-container" id="slidesContainer">
+
+        <!-- SLIDE 1: Title -->
+        <section class="slide active title-slide" data-chapter="intro">
+          <svg class="hero-icon" viewBox="0 0 64 64" fill="none">
+            <rect x="4" y="4" width="56" height="56" rx="8" stroke="#dc2626" stroke-width="2" fill="#18243a"/>
+            <path d="M20 44 L32 16 L44 44 Z" stroke="#dc2626" stroke-width="2" fill="none"/>
+            <circle cx="32" cy="36" r="3" fill="#dc2626"/>
+            <line x1="16" y1="48" x2="48" y2="48" stroke="#1f2d44" stroke-width="1.5"/>
+          </svg>
+          <h1>Offensive Security<br><span>Web Portal</span></h1>
+          <p class="tagline">PT Berlian Sistem Informasi — centralized VAPT platform. Fix scattered workflows, enforce accountability, give stakeholders real-time visibility.</p>
+          <div class="title-meta">
+            <div class="meta-item"><span class="meta-dot"></span> Offensive Sec Portal v2.4</div>
+            <div class="meta-item">📅 Timeline: Apr – Nov 2026</div>
+            <div class="meta-item">🎯 Mockup ready in offsec-new/</div>
+          </div>
+        </section>
+
+        <!-- SLIDE 2: Problem Overview -->
+        <section class="slide" data-chapter="problem">
+          <div class="slide-tag">// THE PROBLEM</div>
+          <h2 class="slide-title">VAPT Operations Are Broken</h2>
+          <p class="slide-subtitle">Current offensive security workflows rely on manual processes — findings get lost, risk decisions lack accountability, and stakeholders fly blind.</p>
+          <div class="slide-content">
+            <div class="card-grid cols-3">
+              <div class="card">
+                <div class="card-icon red">📋</div>
+                <div class="card-num">01</div>
+                <h3>Scattered Findings</h3>
+                <p>Remediation tracked across spreadsheets and PDFs with no shared status.</p>
+              </div>
+              <div class="card">
+                <div class="card-icon orange">⚠️</div>
+                <div class="card-num">02</div>
+                <h3>Informal Risk Acceptance</h3>
+                <p>Decisions made over email and chat — no due dates, contingency plans, or audit trail.</p>
+              </div>
+              <div class="card">
+                <div class="card-icon red">👁️</div>
+                <div class="card-num">03</div>
+                <h3>Zero Visibility</h3>
+                <p>App PIC, Service Manager, and Division Head have no real-time project view.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 3: Problem 1 Detail -->
+        <section class="slide" data-chapter="problem">
+          <div class="slide-tag">// PROBLEM 01</div>
+          <h2 class="slide-title">Finding Remediation Hard to Track</h2>
+          <p class="slide-subtitle">Findings sit in scattered spreadsheets and PDF reports with no shared status — remediation slips and items go unresolved.</p>
+          <div class="slide-content">
+            <div class="problem-visual">
+              <div class="scattered-docs">
+                <div class="doc-chip" style="--rot:-3deg">report_Q1.pdf</div>
+                <div class="doc-chip" style="--rot:2deg">findings_v2.xlsx</div>
+                <div class="doc-chip" style="--rot:-1deg">vapt_scan.pdf</div>
+                <div class="doc-chip" style="--rot:4deg">remediation.xlsx</div>
+                <div class="doc-chip" style="--rot:-2deg">email_export.pdf</div>
+                <div class="doc-chip" style="--rot:1deg">tracker_old.xlsx</div>
+              </div>
+              <div class="arrow-connector">→</div>
+              <div class="problem-result">Items slip through.<br>Remediation stalls.<br>Findings go unresolved.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 4: Problem 2 Detail -->
+        <section class="slide" data-chapter="problem">
+          <div class="slide-tag">// PROBLEM 02</div>
+          <h2 class="slide-title">Risk Acceptance Falls Through the Cracks</h2>
+          <p class="slide-subtitle">Risk acceptance is decided informally over email and chat — with no due dates, contingency plans, or approval trails.</p>
+          <div class="slide-content">
+            <div class="compare-row">
+              <div class="compare-box before">
+                <div class="compare-label">Current State</div>
+                <ul>
+                  <li>Email thread approvals</li>
+                  <li>Chat-based decisions</li>
+                  <li>No due dates set</li>
+                  <li>No contingency plans</li>
+                  <li>No approval audit trail</li>
+                </ul>
+              </div>
+              <div class="compare-arrow">→</div>
+              <div class="compare-box before">
+                <div class="compare-label">Impact</div>
+                <ul>
+                  <li>Accepted risks forgotten</li>
+                  <li>No accountability chain</li>
+                  <li>Compliance gaps at audit</li>
+                  <li>Remediation deadlines missed</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 5: Problem 3 Detail -->
+        <section class="slide" data-chapter="problem">
+          <div class="slide-tag">// PROBLEM 03</div>
+          <h2 class="slide-title">No Stakeholder Visibility</h2>
+          <p class="slide-subtitle">App PIC, Service Manager, and Division Head have no real-time view of project progress, pending approvals, or outstanding accepted risks.</p>
+          <div class="slide-content">
+            <div class="card-grid cols-3">
+              <div class="card">
+                <div class="card-icon red">👤</div>
+                <h3>App PIC</h3>
+                <p>Cannot see remediation status or pending risk acceptances for their application.</p>
+              </div>
+              <div class="card">
+                <div class="card-icon orange">👤</div>
+                <h3>Service Manager</h3>
+                <p>No dashboard for engagement progress or outstanding approvals across services.</p>
+              </div>
+              <div class="card">
+                <div class="card-icon red">👤</div>
+                <h3>Division Head</h3>
+                <p>Lacks portfolio-level view of accepted risks and compliance posture.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 6: Solution Overview -->
+        <section class="slide" data-chapter="solution">
+          <div class="slide-tag">// THE SOLUTION</div>
+          <h2 class="slide-title">Offensive Sec Portal</h2>
+          <p class="slide-subtitle">One platform to centralize VAPT operations, enforce structured workflows, and give every stakeholder the visibility they need — matching our offsec-new mockup.</p>
+          <div class="slide-content">
+            <div class="card-grid cols-2">
+              <div class="card">
+                <div class="card-icon green">🎯</div>
+                <h3>Centralized VAPT Management</h3>
+                <p>Projects, assessors, scope, timelines — all engagement types in one place.</p>
+              </div>
+              <div class="card">
+                <div class="card-icon green">📝</div>
+                <h3>Structured Risk Acceptance</h3>
+                <p>Templated forms, contingency plans, due dates, multi-level approval chain.</p>
+              </div>
+              <div class="card">
+                <div class="card-icon green">🔍</div>
+                <h3>Finding Remediation Visibility</h3>
+                <p>Real-time status tracking with Sysreptor API integration — no double-entry.</p>
+              </div>
+              <div class="card">
+                <div class="card-icon green">✅</div>
+                <h3>Task & Checklist Enforcement</h3>
+                <p>Structured testing phases with checklists — no step skipped.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 7: Solution 1 -->
+        <section class="slide" data-chapter="solution">
+          <div class="slide-tag">// SOLUTION 01</div>
+          <h2 class="slide-title">Centralized VAPT Management</h2>
+          <p class="slide-subtitle">One platform to create projects, assign assessors, define scope, and track timelines across all engagement types.</p>
+          <div class="slide-content">
+            <div class="engagement-tags">
+              <span class="eng-tag highlight">VA</span>
+              <span class="eng-tag highlight">VAPT</span>
+              <span class="eng-tag highlight">VA Infra</span>
+              <span class="eng-tag highlight">VAPT Mobile</span>
+            </div>
+            <div class="card-grid cols-2" style="margin-top:1.5rem">
+              <div class="card">
+                <h3>Project Lifecycle</h3>
+                <p>Create → Assign → Scope → Track → Report — same flow as offsec-projects &amp; offsec-project-detail mockups.</p>
+              </div>
+              <div class="card">
+                <h3>Engagement Timeline</h3>
+                <p>Gantt view on Home shows active engagements — BSI Infra, MMKSI Microsite, KTB HRIS, KTB D-Net.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 8: Solution 2 -->
+        <section class="slide" data-chapter="solution">
+          <div class="slide-tag">// SOLUTION 02</div>
+          <h2 class="slide-title">Structured Risk Acceptance</h2>
+          <p class="slide-subtitle">Replace ad-hoc email approvals with templated risk acceptance forms, contingency plans, due dates, and a multi-level approval chain.</p>
+          <div class="slide-content">
+            <div class="approval-chain">
+              <div class="chain-node">
+                <div class="role">LEVEL 1</div>
+                <div class="label">App PIC</div>
+              </div>
+              <div class="chain-arrow">→</div>
+              <div class="chain-node">
+                <div class="role">LEVEL 2</div>
+                <div class="label">Service Manager</div>
+              </div>
+              <div class="chain-arrow">→</div>
+              <div class="chain-node">
+                <div class="role">LEVEL 3</div>
+                <div class="label">Division Head</div>
+              </div>
+            </div>
+            <div class="card-grid cols-3" style="margin-top:1.5rem">
+              <div class="card"><h3>Templated RA Forms</h3><p>offsec-create-risk-acceptance — standardized fields, bundled findings per project.</p></div>
+              <div class="card"><h3>Contingency Plans</h3><p>Documented mitigation for every accepted risk with expiry tracking.</p></div>
+              <div class="card"><h3>Approver Inbox</h3><p>Pending / Approved / Rejected / Expired tabs — full audit trail per RA.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 9: Solution 3 -->
+        <section class="slide" data-chapter="solution">
+          <div class="slide-tag">// SOLUTION 03</div>
+          <h2 class="slide-title">Finding Remediation Visibility</h2>
+          <p class="slide-subtitle">Real-time status tracking for every vulnerability — with Sysreptor API integration to eliminate double-entry.</p>
+          <div class="slide-content">
+            <div class="status-tracker">
+              <div class="status-pill open">
+                <div class="count">OPEN</div>
+                <div class="label">New / Unaddressed</div>
+              </div>
+              <div class="status-pill progress">
+                <div class="count">IN PROGRESS</div>
+                <div class="label">Remediation Active</div>
+              </div>
+              <div class="status-pill closed">
+                <div class="count">CLOSED</div>
+                <div class="label">Verified Fixed</div>
+              </div>
+            </div>
+            <div class="card" style="margin-top:1.5rem">
+              <h3>🔗 Sysreptor API + VAPT Dashboard</h3>
+              <p>Findings sync from Sysreptor into offsec-findings &amp; offsec-dashboard — CVSS, OWASP tags, severity filters. Assessors report once, portal tracks for everyone.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 10: Solution 4 -->
+        <section class="slide" data-chapter="solution">
+          <div class="slide-tag">// SOLUTION 04</div>
+          <h2 class="slide-title">Task & Checklist Enforcement</h2>
+          <p class="slide-subtitle">Structured testing phases with checklists ensure no step is skipped across every engagement.</p>
+          <div class="slide-content">
+            <div class="phase-steps">
+              <div class="phase-step">
+                <div class="step-icon">🔎</div>
+                <div class="step-name">Recon</div>
+                <div class="step-check">✓ checklist</div>
+              </div>
+              <div class="phase-step">
+                <div class="step-icon">📡</div>
+                <div class="step-name">Scanning</div>
+                <div class="step-check">✓ checklist</div>
+              </div>
+              <div class="phase-step">
+                <div class="step-icon">💥</div>
+                <div class="step-name">Exploitation</div>
+                <div class="step-check">✓ checklist</div>
+              </div>
+              <div class="phase-step">
+                <div class="step-icon">📄</div>
+                <div class="step-name">Reporting</div>
+                <div class="step-check">✓ checklist</div>
+              </div>
+            </div>
+            <div class="card" style="margin-top:1.5rem">
+              <p>Master Data checklists gate each phase — recon, scanning, exploitation, reporting. Enforced via offsec-form-requirement &amp; master-checklist modules. No step skipped across VA, VAPT, VA Infra, VAPT Mobile.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 11: Portal Modules -->
+        <section class="slide" data-chapter="portal">
+          <div class="slide-tag">// PORTAL MODULES</div>
+          <h2 class="slide-title">Built Modules — offsec-new Mockup</h2>
+          <p class="slide-subtitle">Interactive HTML mockup mirrors production portal structure. Click a module to open the live mockup.</p>
+          <div class="slide-content">
+            <div class="module-grid">
+              <a class="module-link" href="offsec-new/offsec-home.html"><div class="module-item"><div class="mod-icon">🏠</div><div><h4>Home</h4><p>KPI strip, engagement Gantt, quick actions</p></div></div></a>
+              <a class="module-link" href="offsec-new/offsec-dashboard.html"><div class="module-item"><div class="mod-icon">📊</div><div><h4>VAPT Dashboard</h4><p>Cross-app findings overview, severity stack</p></div></div></a>
+              <a class="module-link" href="offsec-new/offsec-projects.html"><div class="module-item"><div class="mod-icon">📁</div><div><h4>Projects</h4><p>All engagements — active, planned, completed</p></div></div></a>
+              <a class="module-link" href="offsec-new/offsec-findings.html"><div class="module-item"><div class="mod-icon">🐛</div><div><h4>Findings</h4><p>CVSS, OWASP, status filters, Sysreptor sync</p></div></div></a>
+              <a class="module-link" href="offsec-new/offsec-form-requirement.html"><div class="module-item"><div class="mod-icon">📝</div><div><h4>Form &amp; Requirement</h4><p>Assessment forms, client requirements</p></div></div></a>
+              <a class="module-link" href="offsec-new/offsec-risk-acceptance.html"><div class="module-item"><div class="mod-icon">⚠️</div><div><h4>Risk Acceptance</h4><p>RA requests, approver inbox, expiry alerts</p></div></div></a>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 12: Expected Outcomes -->
+        <section class="slide" data-chapter="outcomes">
+          <div class="slide-tag">// EXPECTED OUTCOMES</div>
+          <h2 class="slide-title">What We Gain After Launch</h2>
+          <p class="slide-subtitle">Six measurable improvements across speed, accountability, and compliance.</p>
+          <div class="slide-content">
+            <div class="outcome-list">
+              <div class="outcome-item">
+                <div class="outcome-num">01</div>
+                <div><h4>Faster Engagement Kickoff</h4><p>Standardized project creation cuts setup time — assessors start testing sooner.</p></div>
+              </div>
+              <div class="outcome-item">
+                <div class="outcome-num">02</div>
+                <div><h4>Zero Missed Findings</h4><p>Centralized tracking with Sysreptor sync — every vulnerability accounted for.</p></div>
+              </div>
+              <div class="outcome-item">
+                <div class="outcome-num">03</div>
+                <div><h4>Risk Acceptance Accountability</h4><p>Formal approval chain with audit trail — no more informal email decisions.</p></div>
+              </div>
+              <div class="outcome-item">
+                <div class="outcome-num">04</div>
+                <div><h4>On-Time Risk Remediation</h4><p>Due dates and alerts drive timely fixes on accepted risks.</p></div>
+              </div>
+              <div class="outcome-item">
+                <div class="outcome-num">05</div>
+                <div><h4>Stakeholder Transparency</h4><p>Real-time dashboards for App PIC, SM, and DH — full project visibility.</p></div>
+              </div>
+              <div class="outcome-item">
+                <div class="outcome-num">06</div>
+                <div><h4>Audit-Ready Compliance</h4><p>Complete records of findings, acceptances, and remediation — ready for any audit.</p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 13: Timeline -->
+        <section class="slide" data-chapter="timeline">
+          <div class="slide-tag">// PROJECT TIMELINE</div>
+          <h2 class="slide-title">4-Phase Delivery Plan</h2>
+          <p class="slide-subtitle">Apr – Nov 2026 — from planning through production release.</p>
+          <div class="slide-content">
+            <div class="timeline">
+              <div class="timeline-track">
+                <div class="timeline-phase active">
+                  <div class="timeline-dot">P1</div>
+                  <h4>Planning & Design</h4>
+                  <div class="dates">Apr – May 2026</div>
+                  <p>Requirements, architecture, UI/UX design, stakeholder alignment</p>
+                </div>
+                <div class="timeline-phase">
+                  <div class="timeline-dot">P2</div>
+                  <h4>Core Development</h4>
+                  <div class="dates">Jun – Aug 2026</div>
+                  <p>Home, Projects, Findings, RA workflows — mockup → production</p>
+                </div>
+                <div class="timeline-phase">
+                  <div class="timeline-dot">P3</div>
+                  <h4>Advanced Features</h4>
+                  <div class="dates">Sep – Oct 2026</div>
+                  <p>Sysreptor API, Dashboard, Master Data, User Management</p>
+                </div>
+                <div class="timeline-phase">
+                  <div class="timeline-dot">P4</div>
+                  <h4>Testing & Release</h4>
+                  <div class="dates">Nov 2026</div>
+                  <p>UAT, security testing, production deployment, training</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SLIDE 14: Closing -->
+        <section class="slide title-slide" data-chapter="closing">
+          <div class="slide-tag">// SUMMARY</div>
+          <h1>One Portal.<br><span>Full Control.</span></h1>
+          <p class="tagline">Offensive Sec Portal — PT Berlian Sistem Informasi. Centralize VAPT, enforce accountability, deliver transparency.</p>
+          <div class="closing-stats">
+            <div class="stat"><div class="num">3</div><div class="label">Problems Solved</div></div>
+            <div class="stat"><div class="num">9</div><div class="label">Portal Modules</div></div>
+            <div class="stat"><div class="num">6</div><div class="label">Expected Outcomes</div></div>
+            <div class="stat"><div class="num">8</div><div class="label">Months to Launch</div></div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const chapters = [
+      { id: 'intro',    label: 'Introduction',      slides: [0] },
+      { id: 'problem',  label: 'The Problem',       slides: [1, 2, 3, 4] },
+      { id: 'solution', label: 'The Solution',      slides: [5, 6, 7, 8, 9] },
+      { id: 'portal',   label: 'Portal Mockup',     slides: [10] },
+      { id: 'outcomes', label: 'Expected Outcomes', slides: [11] },
+      { id: 'timeline', label: 'Project Timeline',  slides: [12] },
+      { id: 'closing',  label: 'Summary',           slides: [13] }
+    ];
+
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let current = 0;
+    let transitioning = false;
+
+    const counterEl = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+    const chapterNav = document.getElementById('chapterNav');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+    function buildChapterNav() {
+      chapters.forEach((ch, i) => {
+        const li = document.createElement('li');
+        li.dataset.chapter = ch.id;
+        li.innerHTML = `<span class="chapter-num">0${i + 1}</span>${ch.label}`;
+        li.addEventListener('click', () => goToSlide(ch.slides[0]));
+        chapterNav.appendChild(li);
+      });
+    }
+
+    function getChapterForSlide(index) {
+      return chapters.find(ch => ch.slides.includes(index));
+    }
+
+    function updateUI() {
+      counterEl.innerHTML = `<span class="current">${current + 1}</span>/${totalSlides}`;
+      progressBar.style.width = `${((current + 1) / totalSlides) * 100}%`;
+
+      document.querySelectorAll('.nav-chapters li').forEach(li => {
+        li.classList.toggle('active', li.dataset.chapter === getChapterForSlide(current)?.id);
+      });
+    }
+
+    function goToSlide(index) {
+      if (transitioning || index === current || index < 0 || index >= totalSlides) return;
+      transitioning = true;
+
+      const direction = index > current ? 'forward' : 'backward';
+      const outgoing = slides[current];
+      const incoming = slides[index];
+
+      outgoing.classList.remove('active');
+      if (direction === 'forward') outgoing.classList.add('exit-left');
+      else outgoing.style.transform = 'translateX(40px)';
+
+      incoming.classList.add('active');
+      incoming.style.transform = 'translateX(0)';
+
+      setTimeout(() => {
+        outgoing.classList.remove('exit-left');
+        outgoing.style.transform = '';
+        current = index;
+        updateUI();
+        transitioning = false;
+      }, 450);
+    }
+
+    function next() { goToSlide(current + 1); }
+    function prev() { goToSlide(current - 1); }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+        e.preventDefault();
+        next();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        prev();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToSlide(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        goToSlide(totalSlides - 1);
+      }
+    });
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', (e) => {
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) diff > 0 ? next() : prev();
+    });
+
+    buildChapterNav();
+    updateUI();
+  </script>
+</body>
+</html>

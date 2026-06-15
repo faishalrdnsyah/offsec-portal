@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Risk Acceptance — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  .stat-card { padding: 16px 20px; }
+  .stat-card .label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card .value { font-size: 24px; font-weight: 800; line-height: 1.1; margin-top: 4px; letter-spacing: -0.02em; }
+  .stat-card .sub { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+  .pill-type { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; }
+  .pill-type.short { background: rgba(245,158,11,0.18); color: var(--warn); }
+  .pill-type.long  { background: rgba(59,130,246,0.18); color: var(--info); }
+  .pill-type .material-symbols-outlined { font-size: 13px; }
+</style>
+</head>
+<body data-page="risk">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1500px; margin: 0 auto; display:flex; flex-direction:column; gap: 18px;">
+
+        <!-- Header row -->
+        <div style="display:flex; justify-content:space-between; align-items:center; gap: 16px; flex-wrap: wrap;">
+          <div>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0; max-width: 720px; line-height: 1.55;">
+              One RA per project bundles findings that won't be remediated within SLA. PIC picks the findings &amp; the approvers; approvers decide once for the whole RA.
+            </p>
+          </div>
+          <div style="display:flex; gap: 8px;">
+            <button class="btn btn-ghost"><span class="material-symbols-outlined">inbox</span>Approver inbox</button>
+            <a class="btn btn-primary" href="offsec-create-risk-acceptance.html"><span class="material-symbols-outlined">add</span>Request RA</a>
+          </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+          <div class="card stat-card">
+            <div class="label">Pending</div>
+            <div class="value mono" style="color: var(--warn)">3</div>
+            <div class="sub">Across 3 projects</div>
+          </div>
+          <div class="card stat-card">
+            <div class="label">Approved</div>
+            <div class="value mono" style="color: var(--accent)">9</div>
+            <div class="sub">FY 2025 + 2026</div>
+          </div>
+          <div class="card stat-card">
+            <div class="label">Findings accepted</div>
+            <div class="value mono">34</div>
+            <div class="sub">Bundled across 9 RAs</div>
+          </div>
+          <div class="card stat-card">
+            <div class="label">Expiring ≤30d</div>
+            <div class="value mono" style="color: var(--primary)">1</div>
+            <div class="sub">BSI-RA-005 — Jun 8</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab active" data-tab="all">All <span class="mono" style="font-size:11px; color: var(--text-faint); margin-left: 4px">14</span></button>
+          <button class="tab" data-tab="Pending">Pending <span class="pill pill-pending" style="margin-left: 4px; padding: 1px 7px; font-size: 10px;">3</span></button>
+          <button class="tab" data-tab="Approved">Approved</button>
+          <button class="tab" data-tab="Rejected">Rejected</button>
+          <button class="tab" data-tab="Expired">Expired</button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="card" style="padding: 12px 14px; display:flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div style="position: relative; flex: 1; min-width: 240px;">
+            <span class="material-symbols-outlined" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;">search</span>
+            <input id="search" class="field" placeholder="Search RA-ID, project, requestor…" style="padding-left: 36px;" oninput="render()"/>
+          </div>
+          <select id="f-app" class="field" style="width: auto;" onchange="render()">
+            <option value="">All applications</option>
+            <option>BSI - Infra</option>
+            <option>MMKSI - Microsite</option>
+            <option>KTB - HRIS</option>
+            <option>MMKSI - VTS</option>
+            <option>BSI - Timesheet</option>
+            <option>KTB - D-Net Interface</option>
+          </select>
+          <select id="f-pic" class="field" style="width: auto;" onchange="render()">
+            <option value="">All PICs</option>
+            <option>Abu Rizal Mahdi</option><option>Sarah Park</option><option>John Lee</option><option>Nur Hasbullah M.</option><option>Budi</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div style="overflow-x: auto;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>RA-ID</th>
+                  <th>Project · Application</th>
+                  <th>Type</th>
+                  <th>Findings</th>
+                  <th>Severity mix</th>
+                  <th>Requested by</th>
+                  <th>Submitted</th>
+                  <th>Expires</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <div id="empty" class="empty-state" style="display:none;">
+            <span class="material-symbols-outlined">policy</span>
+            <div class="empty-state-title">No risk acceptances match those filters.</div>
+            <div class="empty-state-sub">Try clearing a filter or creating a new request.</div>
+            <a class="btn btn-primary btn-sm" href="offsec-create-risk-acceptance.html" style="margin-top: 6px;"><span class="material-symbols-outlined">add</span>Request RA</a>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script>
+const STATUS_PILL = { 'Pending':'pill-pending', 'Approved':'pill-approved', 'Rejected':'pill-rejected', 'Expired':'pill-todo' };
+
+const RA = [
+  { id:'BSI-RA-007', type:'short', project:'BSI Core Infra VA — Q2',    app:'BSI - Infra',           findings:{c:0,h:1,m:1,l:0}, by:'Abu Rizal Mahdi',  submitted:'2026-05-11', expires:'2026-08-12', status:'Pending', days:9 },
+  { id:'KTB-RA-013', type:'short', project:'KTB HRIS Mobile Pentest',   app:'KTB - HRIS',            findings:{c:0,h:1,m:2,l:1}, by:'Nur Hasbullah M.', submitted:'2026-05-15', expires:'2026-08-15', status:'Pending', days:5 },
+  { id:'MMK-RA-003', type:'long',  project:'MMKSI Microsite Pentest',   app:'MMKSI - Microsite',     findings:{c:0,h:0,m:0,l:2}, by:'Sarah Park',       submitted:'2026-05-18', expires:'2027-05-15', status:'Pending', days:2 },
+
+  { id:'BSI-RA-001', type:'long',  project:'BSI Core Infra VA — Q2',    app:'BSI - Infra',           findings:{c:0,h:2,m:1,l:0}, by:'Abu Rizal Mahdi',  submitted:'2026-04-12', expires:'2027-04-20', status:'Approved' },
+  { id:'KTB-RA-009', type:'short', project:'KTB D-Net Interface VAPT',  app:'KTB - D-Net Interface', findings:{c:0,h:0,m:3,l:2}, by:'Budi',             submitted:'2026-03-22', expires:'2026-06-22', status:'Approved' },
+  { id:'MMK-RA-004', type:'long',  project:'MMKSI VTS Web Audit',       app:'MMKSI - VTS',           findings:{c:0,h:0,m:2,l:1}, by:'John Lee',         submitted:'2026-04-05', expires:'2027-04-05', status:'Approved' },
+  { id:'BSI-RA-005', type:'short', project:'BSI Timesheet VA',          app:'BSI - Timesheet',       findings:{c:0,h:0,m:0,l:1}, by:'John Lee',         submitted:'2025-12-08', expires:'2026-06-08', status:'Approved' },
+  { id:'BSI-RA-007a',type:'long',  project:'BSI Core Infra VA — Q2',    app:'BSI - Infra',           findings:{c:0,h:1,m:1,l:0}, by:'Abu Rizal Mahdi',  submitted:'2026-02-15', expires:'2027-02-15', status:'Approved' },
+
+  { id:'MMK-RA-002', type:'short', project:'MMKSI VTS Web Audit',       app:'MMKSI - VTS',           findings:{c:0,h:1,m:0,l:0}, by:'John Lee',         submitted:'2026-04-26', expires:'—',          status:'Rejected' },
+  { id:'KTB-RA-002', type:'long',  project:'KTB HRIS Mobile Pentest',   app:'KTB - HRIS',            findings:{c:0,h:0,m:2,l:1}, by:'Nur Hasbullah M.', submitted:'2026-03-18', expires:'—',          status:'Rejected' },
+
+  { id:'KTB-RA-001', type:'short', project:'KTB D-Net Interface VAPT',  app:'KTB - D-Net Interface', findings:{c:0,h:0,m:1,l:1}, by:'Budi',             submitted:'2025-09-15', expires:'2025-12-31', status:'Expired' },
+];
+
+function sevMix(f) {
+  const total = f.c + f.h + f.m + f.l;
+  if (!total) return `<span style="font-size: 12px; color: var(--text-faint)">—</span>`;
+  const segs = [];
+  if (f.c) segs.push(`<span class="sev sev-critical">${f.c}</span>`);
+  if (f.h) segs.push(`<span class="sev sev-high">${f.h}</span>`);
+  if (f.m) segs.push(`<span class="sev sev-medium">${f.m}</span>`);
+  if (f.l) segs.push(`<span class="sev sev-low">${f.l}</span>`);
+  return `<div style="display:flex; gap: 4px;">${segs.join("")}</div>`;
+}
+
+let curTab = 'all';
+function applyFilters() {
+  const q   = document.getElementById('search').value.toLowerCase();
+  const app = document.getElementById('f-app').value;
+  const pic = document.getElementById('f-pic').value;
+  return RA.filter(r =>
+    (!q || (r.id + r.project + r.app + r.by).toLowerCase().includes(q)) &&
+    (!app || r.app === app) &&
+    (!pic || r.by === pic) &&
+    (curTab === 'all' || r.status === curTab)
+  );
+}
+
+function render() {
+  const rows = applyFilters();
+  const body = document.getElementById('rows');
+  const empty = document.getElementById('empty');
+  if (!rows.length) { body.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+  body.innerHTML = rows.map(r => {
+    const total = r.findings.c + r.findings.h + r.findings.m + r.findings.l;
+    const typePill = r.type === 'short'
+      ? `<span class="pill-type short"><span class="material-symbols-outlined">schedule</span>SHORT</span>`
+      : `<span class="pill-type long"><span class="material-symbols-outlined">event</span>LONG</span>`;
+    return `<tr class="clickable" onclick="alert('RA detail page coming soon — ${r.id}')">
+      <td><span class="mono" style="font-size: 12px; font-weight: 700;">${r.id}</span></td>
+      <td>
+        <div style="font-weight: 600; font-size: 13px; color: var(--text);">${r.project}</div>
+        <div style="font-size: 11.5px; color: var(--text-muted);">${r.app}</div>
+      </td>
+      <td>${typePill}</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px">
+          <span class="mono" style="font-size: 13px; font-weight: 700; color: var(--text)">${total}</span>
+          <span style="font-size: 11px; color: var(--text-faint)">finding${total===1?'':'s'}</span>
+        </div>
+      </td>
+      <td>${sevMix(r.findings)}</td>
+      <td><span style="font-size: 12px;">${r.by}</span></td>
+      <td>
+        <div class="mono" style="font-size: 12px; color: var(--text-muted)">${new Date(r.submitted).toLocaleDateString('en-GB', { day:'2-digit', month:'short' })}</div>
+        ${r.days ? `<div class="mono" style="font-size: 10.5px; color: ${r.days > 7 ? 'var(--primary)' : 'var(--warn)'}; margin-top: 2px;">${r.days}D PENDING</div>` : ''}
+      </td>
+      <td><span class="mono" style="font-size: 12px; color: var(--text-muted)">${r.expires === '—' ? '—' : new Date(r.expires).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })}</span></td>
+      <td><span class="pill ${STATUS_PILL[r.status]}"><span class="dot"></span>${r.status}</span></td>
+      <td><span class="material-symbols-outlined" style="color: var(--text-faint); font-size: 18px">chevron_right</span></td>
+    </tr>`;
+  }).join('');
+}
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  curTab = t.dataset.tab;
+  render();
+}));
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>

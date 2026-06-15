@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>New User — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  .form-section { padding: 22px 24px; }
+  .form-section + .form-section { border-top: 1px solid var(--border); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 720px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .req::after { content: " *"; color: var(--primary); }
+
+  /* Avatar preview */
+  .avatar-preview {
+    width: 64px; height: 64px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 22px;
+    flex-shrink: 0; background: var(--surface-2); color: var(--text-faint);
+    border: 1.5px dashed var(--border-strong);
+    transition: all 0.2s;
+  }
+  .avatar-preview.filled { border-style: solid; border-color: transparent; color: #fff; }
+
+  /* Input with prefix icon */
+  .input-icon-wrap { position: relative; }
+  .input-icon-wrap .material-symbols-outlined { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 17px; pointer-events: none; }
+  .input-icon-wrap .field { padding-left: 36px; }
+  .input-icon-wrap .field.mono-input { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+
+  /* Password field with show/hide */
+  .pwd-wrap { position: relative; }
+  .pwd-wrap .field { padding-right: 84px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .pwd-actions { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; }
+  .pwd-btn {
+    width: 30px; height: 30px;
+    background: transparent; border: 0; border-radius: 6px;
+    color: var(--text-muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: inherit;
+  }
+  .pwd-btn:hover { background: var(--border); color: var(--text); }
+  .pwd-btn .material-symbols-outlined { font-size: 17px; }
+
+  /* Password strength bar */
+  .pwd-meter { display:flex; gap: 4px; margin-top: 8px; }
+  .pwd-meter .seg { flex: 1; height: 5px; border-radius: 3px; background: var(--surface-2); }
+  .pwd-meter.s1 .seg:nth-child(-n+1) { background: var(--sev-high); }
+  .pwd-meter.s2 .seg:nth-child(-n+2) { background: var(--sev-medium); }
+  .pwd-meter.s3 .seg:nth-child(-n+3) { background: var(--sev-low); }
+  .pwd-meter.s4 .seg:nth-child(-n+4) { background: var(--accent); }
+  .pwd-status {
+    display:flex; align-items:center; justify-content: space-between;
+    margin-top: 7px; font-size: 11.5px; color: var(--text-muted);
+  }
+  .pwd-status .lbl { font-weight: 600; }
+  .pwd-status .lbl.s1 { color: var(--sev-high); }
+  .pwd-status .lbl.s2 { color: var(--sev-medium); }
+  .pwd-status .lbl.s3 { color: var(--sev-low); }
+  .pwd-status .lbl.s4 { color: var(--accent); }
+
+  .pwd-checks { display:grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; margin-top: 10px; }
+  .pwd-check { display:flex; align-items:center; gap: 6px; font-size: 11.5px; color: var(--text-muted); }
+  .pwd-check .material-symbols-outlined { font-size: 15px; color: var(--text-faint); }
+  .pwd-check.on { color: var(--accent); }
+  .pwd-check.on .material-symbols-outlined { color: var(--accent); }
+
+  /* Role radio cards */
+  .role-radios { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .role-radio {
+    display:flex; flex-direction: column; gap: 6px;
+    padding: 14px;
+    background: var(--surface-2); border: 1.5px solid var(--border);
+    border-radius: 10px; cursor: pointer; text-align: left;
+    font-family: inherit; color: var(--text);
+    transition: all 0.15s;
+  }
+  .role-radio:hover { border-color: var(--text-muted); }
+  .role-radio.on { background: var(--primary-soft-2); }
+  .role-radio .row1 { display:flex; align-items:center; justify-content:space-between; }
+  .role-radio .ic {
+    width: 32px; height: 32px; border-radius: 9px;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .role-radio .ic .material-symbols-outlined { font-size: 17px; }
+  .role-radio .check {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    display:flex; align-items:center; justify-content:center;
+    background: var(--surface);
+  }
+  .role-radio.on .check::after { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+  .role-radio .t { font-size: 13px; font-weight: 700; color: var(--text); }
+  .role-radio .s { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; }
+
+  /* Status toggle */
+  .toggle-row {
+    display:flex; align-items: center; justify-content: space-between;
+    gap: 14px;
+    padding: 12px 14px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .toggle-row .lbl-t { font-size: 13px; font-weight: 600; color: var(--text); }
+  .toggle-row .lbl-s { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .switch {
+    position: relative; width: 38px; height: 22px;
+    background: var(--border-strong); border-radius: 999px;
+    cursor: pointer; transition: background 0.18s;
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; transition: transform 0.18s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .switch.on { background: var(--primary); }
+  .switch.on::after { transform: translateX(16px); }
+
+  /* Stepper */
+  .stepper { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; }
+  .step { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; color: var(--text-muted); }
+  .step .num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); color: var(--text-muted); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .step.active { color: var(--text); background: var(--surface-2); border: 1px solid var(--border); }
+  .step.active .num { background: var(--primary); color: #fff; }
+  .step-sep { flex: 1; height: 1px; background: var(--border); max-width: 60px; }
+
+  .field-hint { font-size: 11px; color: var(--text-faint); margin-top: 5px; }
+  .field-hint.err { color: var(--sev-high); }
+</style>
+</head>
+<body data-page="user-create">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1100px; margin: 0 auto;">
+
+        <a href="offsec-users.html" style="display:inline-flex; align-items:center; gap: 6px; font-size: 12.5px; color: var(--text-muted); text-decoration: none; margin-bottom: 14px;">
+          <span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>
+          All users
+        </a>
+
+        <h1 id="page-h" style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; color: var(--text);">New user</h1>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 22px;">Provision a portal account. Required fields marked with <span style="color: var(--primary)">*</span>.</p>
+
+        <!-- Stepper -->
+        <div class="stepper">
+          <div class="step active"><span class="num">1</span> Identity</div>
+          <div class="step-sep"></div>
+          <div class="step"><span class="num">2</span> Credentials</div>
+          <div class="step-sep"></div>
+          <div class="step"><span class="num">3</span> Role &amp; access</div>
+        </div>
+
+        <form id="user-form" class="card" style="padding: 0;">
+
+          <!-- ============ 1. Identity ============ -->
+          <div class="form-section">
+            <div class="card-title" style="margin-bottom: 4px;">
+              <span class="material-symbols-outlined ico-bullet ms-fill">badge</span>
+              Identity
+            </div>
+            <p class="card-sub" style="margin-left: 34px; margin-bottom: 18px;">Who is this account for?</p>
+
+            <div style="display:flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;">
+              <div style="display:flex; flex-direction: column; align-items: center; gap: 6px;">
+                <div class="avatar-preview" id="avatar-preview">?</div>
+                <div style="font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Preview</div>
+              </div>
+              <div class="form-grid" style="flex:1; min-width: 280px;">
+                <div class="full">
+                  <label class="field-label req" for="f-name">Full Name</label>
+                  <div class="input-icon-wrap">
+                    <span class="material-symbols-outlined">person</span>
+                    <input id="f-name" class="field" type="text" placeholder="e.g. Sarah Park" required/>
+                  </div>
+                </div>
+                <div>
+                  <label class="field-label req" for="f-username">Username</label>
+                  <div class="input-icon-wrap">
+                    <span class="material-symbols-outlined">alternate_email</span>
+                    <input id="f-username" class="field mono-input" type="text" placeholder="sarah.park" pattern="^[a-z][a-z0-9._-]{2,30}$" required/>
+                  </div>
+                  <div class="field-hint" id="username-hint">3–30 chars, lowercase letters / digits / <code style="font-family:JetBrains Mono,monospace">. _ -</code></div>
+                </div>
+                <div>
+                  <label class="field-label req" for="f-email">Email</label>
+                  <div class="input-icon-wrap">
+                    <span class="material-symbols-outlined">mail</span>
+                    <input id="f-email" class="field mono-input" type="email" placeholder="sarah.park@offensivesec.id" required/>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ 2. Credentials ============ -->
+          <div class="form-section">
+            <div class="card-title" style="margin-bottom: 4px;">
+              <span class="material-symbols-outlined ico-bullet ms-fill">lock</span>
+              Credentials
+            </div>
+            <p class="card-sub" style="margin-left: 34px; margin-bottom: 18px;">Set an initial password — the user will be prompted to change it on first sign-in.</p>
+
+            <div class="form-grid">
+              <div>
+                <label class="field-label req" for="f-password">Password</label>
+                <div class="pwd-wrap">
+                  <input id="f-password" class="field" type="password" placeholder="Min. 12 characters" required minlength="12" autocomplete="new-password"/>
+                  <div class="pwd-actions">
+                    <button type="button" class="pwd-btn" id="gen-pwd" title="Generate strong password"><span class="material-symbols-outlined">refresh</span></button>
+                    <button type="button" class="pwd-btn" id="toggle-pwd" title="Show password"><span class="material-symbols-outlined">visibility</span></button>
+                  </div>
+                </div>
+                <div class="pwd-meter" id="pwd-meter">
+                  <span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span>
+                </div>
+                <div class="pwd-status">
+                  <span>Strength: <span class="lbl" id="pwd-lbl">—</span></span>
+                  <span class="mono" id="pwd-len">0 chars</span>
+                </div>
+                <div class="pwd-checks">
+                  <div class="pwd-check" data-check="len"><span class="material-symbols-outlined">circle</span>12+ characters</div>
+                  <div class="pwd-check" data-check="upper"><span class="material-symbols-outlined">circle</span>Uppercase letter</div>
+                  <div class="pwd-check" data-check="lower"><span class="material-symbols-outlined">circle</span>Lowercase letter</div>
+                  <div class="pwd-check" data-check="digit"><span class="material-symbols-outlined">circle</span>Digit</div>
+                  <div class="pwd-check" data-check="symbol"><span class="material-symbols-outlined">circle</span>Symbol</div>
+                  <div class="pwd-check" data-check="nocommon"><span class="material-symbols-outlined">circle</span>Not a common password</div>
+                </div>
+              </div>
+
+              <div>
+                <label class="field-label req" for="f-password-c">Confirm Password</label>
+                <div class="pwd-wrap">
+                  <input id="f-password-c" class="field" type="password" placeholder="Retype password" required minlength="12" autocomplete="new-password"/>
+                  <div class="pwd-actions">
+                    <button type="button" class="pwd-btn" id="toggle-pwd-c" title="Show password"><span class="material-symbols-outlined">visibility</span></button>
+                  </div>
+                </div>
+                <div class="field-hint" id="match-hint">Both passwords must match.</div>
+
+                <div class="toggle-row" style="margin-top: 14px;">
+                  <div>
+                    <div class="lbl-t">Require MFA enrollment</div>
+                    <div class="lbl-s">User must enroll TOTP on first sign-in</div>
+                  </div>
+                  <div class="switch on" id="mfa-switch"></div>
+                </div>
+
+                <div class="toggle-row" style="margin-top: 8px;">
+                  <div>
+                    <div class="lbl-t">Force password change on first login</div>
+                    <div class="lbl-s">Recommended for shared / generated passwords</div>
+                  </div>
+                  <div class="switch on" id="force-switch"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ 3. Role & access ============ -->
+          <div class="form-section">
+            <div class="card-title" style="margin-bottom: 4px;">
+              <span class="material-symbols-outlined ico-bullet ms-fill">shield_person</span>
+              Role &amp; access
+            </div>
+            <p class="card-sub" style="margin-left: 34px; margin-bottom: 18px;">Roles determine what the user can read, create, update, or approve.</p>
+
+            <div class="role-radios" id="role-radios"></div>
+
+            <div style="margin-top: 18px;">
+              <label class="field-label">Account Status</label>
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+                <div class="toggle-row" id="status-row">
+                  <div>
+                    <div class="lbl-t" id="status-t">Active</div>
+                    <div class="lbl-s">User can sign in and use the portal</div>
+                  </div>
+                  <div class="switch on" id="status-switch"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ Actions ============ -->
+          <div style="padding: 18px 24px; border-top: 1px solid var(--border); background: var(--surface-2); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-radius: 0 0 14px 14px;">
+            <a class="btn btn-ghost" href="offsec-users.html">
+              <span class="material-symbols-outlined">close</span>
+              Cancel
+            </a>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-soft" type="button" id="save-draft">
+                <span class="material-symbols-outlined">save</span>
+                Save as draft
+              </button>
+              <button class="btn btn-primary" type="submit" id="submit-btn">
+                <span class="material-symbols-outlined">check</span>
+                Create user
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script src="users-data.js"></script>
+<script>
+const COMMON_PWDS = ['password','password1','password123','qwerty','12345678','iloveyou','letmein','admin','admin123','welcome','welcome1','offensivesec'];
+
+// =========== Avatar preview live ===========
+const nameIn = document.getElementById('f-name');
+const avPreview = document.getElementById('avatar-preview');
+nameIn.addEventListener('input', () => {
+  const v = nameIn.value.trim();
+  if (!v) { avPreview.textContent = '?'; avPreview.classList.remove('filled'); avPreview.style.background = ''; return; }
+  avPreview.textContent = userInitials(v);
+  avPreview.classList.add('filled');
+  avPreview.style.background = userAvatarColor(v);
+});
+
+// Auto-suggest username from name when username is empty
+const userIn = document.getElementById('f-username');
+let userDirty = false;
+userIn.addEventListener('input', () => { userDirty = true; });
+nameIn.addEventListener('input', () => {
+  if (userDirty) return;
+  const parts = nameIn.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) userIn.value = parts[0] + '.' + parts[parts.length - 1].replace(/[^a-z0-9]/g,'');
+  else if (parts.length === 1) userIn.value = parts[0];
+});
+
+// =========== Password show/hide ===========
+function bindToggle(btnId, fieldId) {
+  document.getElementById(btnId).addEventListener('click', () => {
+    const f = document.getElementById(fieldId);
+    const btn = document.getElementById(btnId);
+    const ico = btn.querySelector('.material-symbols-outlined');
+    if (f.type === 'password') { f.type = 'text'; ico.textContent = 'visibility_off'; }
+    else { f.type = 'password'; ico.textContent = 'visibility'; }
+  });
+}
+bindToggle('toggle-pwd', 'f-password');
+bindToggle('toggle-pwd-c', 'f-password-c');
+
+// =========== Password strength meter ===========
+const pwdIn = document.getElementById('f-password');
+const pwdC  = document.getElementById('f-password-c');
+function checkPwd() {
+  const v = pwdIn.value;
+  const checks = {
+    len:      v.length >= 12,
+    upper:    /[A-Z]/.test(v),
+    lower:    /[a-z]/.test(v),
+    digit:    /\d/.test(v),
+    symbol:   /[^\w\s]/.test(v),
+    nocommon: v.length > 0 && !COMMON_PWDS.includes(v.toLowerCase()),
+  };
+  document.querySelectorAll('[data-check]').forEach(el => {
+    const k = el.dataset.check;
+    const on = checks[k];
+    el.classList.toggle('on', on);
+    el.querySelector('.material-symbols-outlined').textContent = on ? 'check_circle' : 'circle';
+  });
+  const score = Object.values(checks).filter(Boolean).length;
+  const sBucket = score >= 6 ? 4 : score >= 5 ? 3 : score >= 3 ? 2 : score >= 1 ? 1 : 0;
+  const meter = document.getElementById('pwd-meter');
+  meter.className = 'pwd-meter' + (sBucket ? ' s' + sBucket : '');
+  const lblEl = document.getElementById('pwd-lbl');
+  lblEl.className = 'lbl' + (sBucket ? ' s' + sBucket : '');
+  lblEl.textContent = ['—','Weak','Fair','Strong','Excellent'][sBucket];
+  document.getElementById('pwd-len').textContent = v.length + ' chars';
+
+  // match hint
+  const match = document.getElementById('match-hint');
+  if (!pwdC.value) {
+    match.className = 'field-hint';
+    match.textContent = 'Both passwords must match.';
+  } else if (pwdC.value === v) {
+    match.className = 'field-hint';
+    match.style.color = 'var(--accent)';
+    match.textContent = '✓ Passwords match.';
+  } else {
+    match.className = 'field-hint err';
+    match.style.color = '';
+    match.textContent = '✗ Passwords do not match.';
+  }
+}
+pwdIn.addEventListener('input', checkPwd);
+pwdC.addEventListener('input', checkPwd);
+
+// Generate strong password
+document.getElementById('gen-pwd').addEventListener('click', () => {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnpqrstuvwxyz';
+  const digit = '23456789';
+  const symb  = '!@#$%^&*()-_=+';
+  const all   = upper + lower + digit + symb;
+  let p = '';
+  p += upper[Math.floor(Math.random()*upper.length)];
+  p += lower[Math.floor(Math.random()*lower.length)];
+  p += digit[Math.floor(Math.random()*digit.length)];
+  p += symb[Math.floor(Math.random()*symb.length)];
+  for (let i = 0; i < 12; i++) p += all[Math.floor(Math.random()*all.length)];
+  // shuffle
+  p = p.split('').sort(() => Math.random() - 0.5).join('');
+  pwdIn.value = p;
+  pwdC.value = p;
+  pwdIn.type = 'text';
+  pwdC.type = 'text';
+  document.querySelector('#toggle-pwd .material-symbols-outlined').textContent = 'visibility_off';
+  document.querySelector('#toggle-pwd-c .material-symbols-outlined').textContent = 'visibility_off';
+  checkPwd();
+});
+
+// =========== Toggles ===========
+function bindSwitch(id) {
+  const el = document.getElementById(id);
+  el.addEventListener('click', () => el.classList.toggle('on'));
+  return el;
+}
+const mfaSwitch    = bindSwitch('mfa-switch');
+const forceSwitch  = bindSwitch('force-switch');
+const statusSwitch = document.getElementById('status-switch');
+statusSwitch.addEventListener('click', () => {
+  statusSwitch.classList.toggle('on');
+  document.getElementById('status-t').textContent = statusSwitch.classList.contains('on') ? 'Active' : 'Inactive';
+});
+
+// =========== Role radios ===========
+const radioWrap = document.getElementById('role-radios');
+let selectedRole = '';
+radioWrap.innerHTML = ROLES.map(r => `
+  <button type="button" class="role-radio" data-role="${r.id}" style="--role-color:${r.color}">
+    <div class="row1">
+      <div class="ic" style="color:${r.color}"><span class="material-symbols-outlined ms-fill">${r.icon}</span></div>
+      <div class="check"></div>
+    </div>
+    <div class="t">${r.name}</div>
+    <div class="s">${r.desc}</div>
+  </button>
+`).join('');
+radioWrap.querySelectorAll('[data-role]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    radioWrap.querySelectorAll('[data-role]').forEach(b => {
+      b.classList.toggle('on', b === btn);
+      if (b === btn) {
+        const r = roleById(b.dataset.role);
+        b.style.borderColor = r.color;
+        b.style.boxShadow = `0 0 0 1px ${r.color}`;
+        b.style.background = r.color + '14';
+        b.querySelector('.check').style.background = r.color;
+        b.querySelector('.check').style.borderColor = r.color;
+        b.querySelector('.check').innerHTML = '<span style="width:8px; height:8px; border-radius:50%; background:#fff;"></span>';
+      } else {
+        b.style.borderColor = '';
+        b.style.boxShadow = '';
+        b.style.background = '';
+        b.querySelector('.check').style.background = '';
+        b.querySelector('.check').style.borderColor = '';
+        b.querySelector('.check').innerHTML = '';
+      }
+    });
+    selectedRole = btn.dataset.role;
+  });
+});
+
+// =========== Edit mode ===========
+const params = new URLSearchParams(location.search);
+const editId = params.get('id');
+if (editId) {
+  const u = USERS.find(x => x.id === editId);
+  if (u) {
+    document.getElementById('page-h').textContent = 'Edit user';
+    document.getElementById('submit-btn').innerHTML = '<span class="material-symbols-outlined">check</span>Save changes';
+    document.title = `Edit ${u.name} — Offensive Sec Portal`;
+
+    nameIn.value = u.name; nameIn.dispatchEvent(new Event('input'));
+    userIn.value = u.username; userDirty = true;
+    document.getElementById('f-email').value = u.email;
+
+    // hide password fields (don't reveal hash, don't force change)
+    document.querySelector('label[for="f-password"]').textContent = 'New Password';
+    document.querySelector('label[for="f-password"]').classList.remove('req');
+    document.querySelector('label[for="f-password-c"]').textContent = 'Confirm New Password';
+    document.querySelector('label[for="f-password-c"]').classList.remove('req');
+    pwdIn.required = false; pwdC.required = false;
+    pwdIn.placeholder = 'Leave empty to keep current password';
+    pwdC.placeholder = '';
+
+    // MFA switch
+    mfaSwitch.classList.toggle('on', u.mfa);
+    forceSwitch.classList.toggle('on', false);
+
+    // role
+    const roleBtn = document.querySelector(`[data-role="${u.role}"]`);
+    if (roleBtn) roleBtn.click();
+
+    // status
+    if (u.status !== 'Active') {
+      statusSwitch.classList.remove('on');
+      document.getElementById('status-t').textContent = u.status;
+    }
+  }
+}
+
+// =========== Submit ===========
+document.getElementById('user-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!selectedRole) { alert('Please select a role.'); return; }
+  if (!editId && pwdIn.value !== pwdC.value) { alert('Passwords do not match.'); return; }
+  const data = {
+    name:         nameIn.value.trim(),
+    username:     userIn.value.trim(),
+    email:        document.getElementById('f-email').value.trim(),
+    passwordSet:  !!pwdIn.value,
+    role:         selectedRole,
+    requireMfa:   mfaSwitch.classList.contains('on'),
+    forceChange:  forceSwitch.classList.contains('on'),
+    status:       statusSwitch.classList.contains('on') ? 'Active' : 'Inactive',
+  };
+  alert(`User ${editId ? 'updated' : 'created'} (demo)\n\n` + JSON.stringify(data, null, 2));
+  window.location.href = 'offsec-users.html';
+});
+
+document.getElementById('save-draft').addEventListener('click', () => {
+  alert('Saved as draft (demo).');
+});
+</script>
+</body>
+</html>

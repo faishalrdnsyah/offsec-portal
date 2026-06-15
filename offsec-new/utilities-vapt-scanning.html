@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VAPT Scanning — Utilities Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  /* ============ Utilities Portal — palette override ============
+     Re-skin the shared shell.css primary tokens with the
+     "Automation Utilities" amber from index.html (#f59e0b).
+     This propagates to: active sidebar link, btn-primary,
+     field focus, .tab.active, .ico-bullet, .tb-btn.active, etc.
+  */
+  :root {
+    --primary:        #f59e0b;
+    --primary-600:    #d97706;
+    --primary-soft:   rgba(245, 158, 11, 0.18);
+    --primary-soft-2: rgba(245, 158, 11, 0.10);
+  }
+  /* Notification dot border tweak so it reads on the amber surface */
+  .tb-btn .notif-dot { background: var(--primary); }
+  .tb-btn.active { color: #fde68a; }
+
+  /* ============ Stat helpers (from auto-scan) ============ */
+  .stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; line-height: 1; }
+  .font-mono  { font-family: 'JetBrains Mono', monospace; font-feature-settings: 'tnum'; }
+  .text-faint { color: var(--text-faint); }
+  .field-sm   { padding: 7px 10px; font-size: 12.5px; }
+  .btn-lg     { padding: 11px 18px; font-size: 14px; }
+  kbd         { font-family: 'JetBrains Mono', monospace; }
+
+  /* ============ Terminal ============ */
+  .terminal { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.7; }
+  .terminal .log-ok      { color: #22c55e; }
+  .terminal .log-warn    { color: #f59e0b; }
+  .terminal .log-error   { color: #ef4444; }
+  .terminal .log-info    { color: #60a5fa; }
+  .terminal .log-dim     { color: #64748b; }
+  .terminal .log-section { color: #94a3b8; border-top: 1px solid #1e293b; margin-top: 5px; padding-top: 5px; }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor-blink { animation: blink 1s step-end infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* ============ Profile radio cards ============ */
+  .profile-card {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px; border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .profile-card:hover { border-color: var(--border-strong); }
+  .profile-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-soft-2);
+  }
+  .profile-card input[type="radio"] { accent-color: var(--primary); margin-top: 2px; flex-shrink: 0; }
+
+  /* ============ Scan card ============ */
+  .scan-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: all 0.2s; }
+
+  /* ============ Status pills ============ */
+  .status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .status-pill .material-symbols-outlined { font-size: 12px; }
+  .status-running   { background: rgba(59,130,246,0.14); color: #60a5fa; }
+  .status-queued    { background: rgba(168,85,247,0.14); color: #c4b5fd; }
+  .status-completed { background: rgba(34,197,94,0.14);  color: #4ade80; }
+  .status-failed    { background: rgba(239,68,68,0.14);  color: #f87171; }
+  .status-killed    { background: rgba(245,158,11,0.18); color: var(--warn); }
+
+  /* ============ Module toggles ============ */
+  .module-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 10px; border-radius: 8px;
+    background: var(--surface-2); cursor: pointer;
+  }
+  .module-row input { accent-color: var(--primary); }
+
+  /* ============ Data table (inside cards) ============ */
+  .data-table th {
+    text-align: left; padding-bottom: 10px;
+    font-size: 10.5px; font-weight: 700;
+    color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td { padding: 12px 12px 12px 0; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--surface-2); }
+</style>
+</head>
+<body data-page="vapt-scanning">
+
+<div class="shell">
+  <!-- ============ Sidebar (Utilities Portal) ============ -->
+  <aside class="rail">
+    <div class="rail-brand">
+      <div class="brand-mark" style="color: var(--primary); width: 32px; height: 32px; background: linear-gradient(135deg, #f59e0b, #b45309); border-radius: 9px; box-shadow: 0 6px 16px -6px rgba(245,158,11,0.6);">
+        <span class="material-symbols-outlined ms-fill" style="color: #fff; font-size: 20px;">build</span>
+      </div>
+      <div class="rail-brand-text">
+        <div class="n">Utilities</div>
+        <div class="v">AUTOMATION · v1.0</div>
+      </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto" style="padding: 0 10px 12px;">
+      <div class="rail-section-label">Workspace</div>
+      <a class="side-link active" href="vapt-scanning.html">
+        <span class="material-symbols-outlined">radar</span>
+        <span class="side-label">VAPT Scanning</span>
+      </a>
+    </nav>
+
+    <div style="border-top:1px solid var(--border); padding: 10px; display:flex; flex-direction:column; gap:2px;">
+      <button class="side-link" id="rail-collapse" type="button" title="Collapse sidebar">
+        <span class="material-symbols-outlined" id="rail-collapse-icon">chevron_left</span>
+        <span class="side-label">Collapse</span>
+      </button>
+      <a class="side-link" href="index.html">
+        <span class="material-symbols-outlined">swap_horiz</span>
+        <span class="side-label">Switch Portal</span>
+      </a>
+      <a class="side-link" href="#" onclick="event.preventDefault(); alert('Settings — coming soon.')">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="side-label">Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============ Main column ============ -->
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="flex items-center" style="gap: 14px; min-width: 0;">
+        <button class="tb-btn" id="rail-collapse-top" title="Toggle sidebar">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+        <div>
+          <h1 style="font-size: 17px; font-weight: 800; letter-spacing: -0.01em; margin: 0; color: var(--text); line-height: 1.2;">VAPT Scanning</h1>
+          <p style="font-size: 12px; color: var(--text-muted); margin: 2px 0 0;">Automated reconnaissance & vulnerability sweeps</p>
+        </div>
+      </div>
+      <div class="flex items-center" style="gap: 8px;">
+        <div style="text-align: right; font-size: 11.5px; color: var(--text-muted); margin-right: 6px; line-height: 1.25;">
+          Last refresh<br/>
+          <strong class="mono" style="color: var(--text); font-weight: 700;">26-May-26 · 10:00</strong>
+        </div>
+        <button class="tb-btn" title="Notifications">
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="notif-dot"></span>
+        </button>
+        <button class="tb-btn" title="Profile" style="background: linear-gradient(135deg, #f59e0b, #b45309); color: #fff; font-weight: 700; font-size: 12px;">AR</button>
+      </div>
+    </header>
+
+    <!-- ============ Main scroll area ============ -->
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px;">
+      <div style="max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px;">
+
+        <!-- Page header -->
+        <div>
+          <div class="mono" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-faint); margin-bottom: 4px;">WORKSPACE / TOOLS</div>
+          <h2 style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin: 0;">Automated Scanning</h2>
+          <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px; max-width: 760px;">
+            Run <span class="mono" style="color: var(--primary); font-size: 13px;">scannerweb.py</span> against multiple targets — subdomain enum, dir busting, ffuf fuzzing and more in one pipeline.
+          </p>
+        </div>
+
+        <!-- KPI strip -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+          <div class="card" style="padding: 18px;">
+            <div class="stat">
+              <span class="stat-label">Scans Today</span>
+              <span id="stat-today" class="stat-value">12</span>
+              <span class="text-xs" style="color: var(--text-faint);">scans today</span>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px;">
+            <div class="stat">
+              <span class="stat-label">Total Scans</span>
+              <span id="stat-total" class="stat-value">487</span>
+              <span class="text-xs" style="color: var(--text-faint);">All time</span>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px;">
+            <div class="stat">
+              <span class="stat-label">Findings Found</span>
+              <span id="stat-findings" class="stat-value" style="color: var(--sev-high);">214</span>
+              <span class="text-xs" style="color: var(--text-faint);">Across all targets</span>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px;">
+            <div class="stat">
+              <span class="stat-label">Avg. Duration</span>
+              <span id="stat-duration" class="stat-value">18m</span>
+              <span class="text-xs" style="color: var(--text-faint);">Completed scans</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two-column layout -->
+        <div style="display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start;">
+
+          <!-- ── LEFT: Config Panel ── -->
+          <div style="display: flex; flex-direction: column; gap: 18px;">
+
+            <!-- Scan Configuration -->
+            <div class="card" style="padding: 20px 22px;">
+              <div class="card-title" style="margin-bottom: 16px;">
+                <span class="material-symbols-outlined ico-bullet ms-fill">tune</span>
+                Scan Configuration
+              </div>
+
+              <!-- Targets -->
+              <div style="margin-bottom: 16px;">
+                <label class="field-label">Targets *</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                  <div style="position: relative; flex: 1;">
+                    <span class="material-symbols-outlined" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--text-faint); pointer-events: none;">language</span>
+                    <input id="inp-target" type="text" class="field" placeholder="example.com or 192.168.1.1" style="padding-left: 34px;"/>
+                  </div>
+                  <button onclick="addTarget()" class="btn btn-soft" style="flex-shrink: 0;">
+                    <span class="material-symbols-outlined">add</span>Add
+                  </button>
+                </div>
+                <p style="font-size: 11px; color: var(--text-faint); margin-bottom: 8px;">
+                  Press <kbd style="background: var(--surface-2); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; font-size: 10px;">Enter</kbd> or click Add.
+                </p>
+                <div id="target-queue" style="display: none; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span class="mono" style="font-size: 10px; text-transform: uppercase; color: var(--text-faint); letter-spacing: 0.08em;">Queue (<span id="queue-count">0</span>)</span>
+                    <button onclick="clearQueue()" style="font-size: 11px; color: var(--text-faint); background: none; border: none; cursor: pointer;">Clear all</button>
+                  </div>
+                  <div id="queue-list" style="display: flex; flex-direction: column; gap: 4px;"></div>
+                </div>
+              </div>
+
+              <!-- Link to Project -->
+              <div style="margin-bottom: 16px;">
+                <label class="field-label">Link to Project</label>
+                <select id="inp-project" class="field">
+                  <option value="">— None (standalone scan) —</option>
+                  <option value="PRJ-001">BSI Core Infra VA — Q2</option>
+                  <option value="PRJ-002">MMKSI Microsite Pentest</option>
+                  <option value="PRJ-004">MMKSI VTS Web Audit</option>
+                  <option value="PRJ-005">KTB D-Net Interface VAPT</option>
+                </select>
+              </div>
+
+              <!-- Scan Profile -->
+              <div style="margin-bottom: 16px;">
+                <label class="field-label">Scan Profile</label>
+                <div id="profile-group" style="display: flex; flex-direction: column; gap: 6px;">
+                  <label class="profile-card selected" data-profile="full">
+                    <input type="radio" name="scan-profile" value="full" checked/>
+                    <div>
+                      <p style="font-size: 13px; font-weight: 700; color: var(--text); margin: 0;">Full Scan</p>
+                      <p style="font-size: 11px; color: var(--text-faint); margin: 2px 0 0;">Subdomain enum · Nmap · SSL · dirsearch · Nikto · ffuf (~25–40 min)</p>
+                    </div>
+                  </label>
+                  <label class="profile-card" data-profile="quick">
+                    <input type="radio" name="scan-profile" value="quick"/>
+                    <div>
+                      <p style="font-size: 13px; font-weight: 700; color: var(--text); margin: 0;">Quick Scan</p>
+                      <p style="font-size: 11px; color: var(--text-faint); margin: 2px 0 0;">Nmap ports · httpx · ffuf path fuzz only (~5–8 min)</p>
+                    </div>
+                  </label>
+                  <label class="profile-card" data-profile="custom">
+                    <input type="radio" name="scan-profile" value="custom"/>
+                    <div>
+                      <p style="font-size: 13px; font-weight: 700; color: var(--text); margin: 0;">Custom</p>
+                      <p style="font-size: 11px; color: var(--text-faint); margin: 2px 0 0;">Toggle individual modules below</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Custom Modules -->
+              <div id="custom-modules" style="display: none; margin-bottom: 16px; flex-direction: column; gap: 6px;">
+                <label class="field-label">Modules</label>
+                <label class="module-row"><div style="display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-faint);">manage_search</span><span style="font-size: 13px; color: var(--text);">Subdomain Enum</span></div><input type="checkbox" checked/></label>
+                <label class="module-row"><div style="display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-faint);">network_ping</span><span style="font-size: 13px; color: var(--text);">Nmap Port Scan</span></div><input type="checkbox" checked/></label>
+                <label class="module-row"><div style="display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-faint);">security</span><span style="font-size: 13px; color: var(--text);">Nmap Vuln Scripts</span></div><input type="checkbox" checked/></label>
+                <label class="module-row"><div style="display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-faint);">http</span><span style="font-size: 13px; color: var(--text);">httpx Tech Detection</span></div><input type="checkbox" checked/></label>
+                <label class="module-row"><div style="display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-faint);">lock</span><span style="font-size: 13px; color: var(--text);">SSL / TLS</span></div><input type="checkbox" checked/></label>
+                <label class="module-row"><div style="display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-faint);">folder_open</span><span style="font-size: 13px; color: var(--text);">Directory Enum</span></div><input type="checkbox" checked/></label>
+                <label class="module-row"><div style="display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-faint);">bug_report</span><span style="font-size: 13px; color: var(--text);">Nikto Web Scanner</span></div><input type="checkbox" checked/></label>
+                <label class="module-row"><div style="display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-faint);">blur_on</span><span style="font-size: 13px; color: var(--text);">ffuf Fuzzing</span></div><input type="checkbox" checked/></label>
+              </div>
+
+              <!-- Advanced Options -->
+              <div style="margin-bottom: 18px;">
+                <button id="adv-toggle" onclick="toggleAdv()" style="width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; cursor: pointer; padding: 4px 0;">
+                  <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint);">Advanced Options</span>
+                  <span id="adv-icon" class="material-symbols-outlined" style="font-size: 18px; color: var(--text-faint);">expand_more</span>
+                </button>
+                <div id="adv-options" style="display: none; flex-direction: column; gap: 12px; margin-top: 10px;">
+                  <div>
+                    <label class="field-label">Wordlist <span class="mono" style="font-weight: 400; color: var(--text-faint);">-w</span></label>
+                    <input id="inp-wordlist" type="text" class="field field-sm mono" placeholder="~/seclists/.../common.txt"/>
+                  </div>
+                  <div>
+                    <label class="field-label">Threads <span class="mono" style="font-weight: 400; color: var(--text-faint);">-t</span> — <span id="threads-val" style="color: var(--primary); font-weight: 700;">50</span></label>
+                    <input id="inp-threads" type="range" min="10" max="200" value="50" step="10"
+                      oninput="document.getElementById('threads-val').textContent=this.value; updateCLI();"
+                      style="width: 100%; accent-color: var(--primary);"/>
+                  </div>
+                  <div>
+                    <label class="field-label">Output Directory <span class="mono" style="font-weight: 400; color: var(--text-faint);">-o</span></label>
+                    <input id="inp-output" type="text" class="field field-sm mono" placeholder="~/scans (default)"/>
+                  </div>
+                  <div>
+                    <label class="field-label">Skip Flags</label>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="skip-subdomain" style="accent-color: var(--primary);"/><span class="mono" style="font-size: 12px; color: var(--text);">--skip-subdomain</span></label>
+                      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="skip-ssl"       style="accent-color: var(--primary);"/><span class="mono" style="font-size: 12px; color: var(--text);">--skip-ssl</span></label>
+                      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" id="skip-fuzz"      style="accent-color: var(--primary);"/><span class="mono" style="font-size: 12px; color: var(--text);">--skip-fuzz</span></label>
+                    </div>
+                  </div>
+                  <!-- CLI Preview -->
+                  <div style="background: #0b1220; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;">
+                    <p style="font-size: 10px; color: #64748b; margin: 0 0 4px;">Command preview</p>
+                    <p id="cli-preview" class="mono" style="font-size: 11px; color: #22c55e; word-break: break-all; margin: 0;">python3 scannerweb.py &lt;target&gt;</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Concurrency -->
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px;">
+                <div>
+                  <p style="font-size: 13px; font-weight: 600; color: var(--text); margin: 0;">Max Concurrent Scans</p>
+                  <p style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">Run multiple targets in parallel</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                  <button onclick="changeConcurrency(-1)" class="btn btn-ghost btn-sm" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">−</button>
+                  <span id="concurrency-val" style="font-size: 18px; font-weight: 900; color: var(--primary); min-width: 20px; text-align: center;">3</span>
+                  <button onclick="changeConcurrency(1)"  class="btn btn-ghost btn-sm" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">+</button>
+                </div>
+              </div>
+
+              <!-- Launch button -->
+              <button id="btn-launch" onclick="launchQueue()" class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;">
+                <span class="material-symbols-outlined ms-fill">rocket_launch</span>
+                Launch Scan<span id="launch-label"></span>
+              </button>
+              <p style="font-size: 11px; color: var(--text-faint); text-align: center; margin-top: 8px;">
+                Executes <span class="mono">scannerweb.py</span> on the server.
+              </p>
+            </div>
+
+            <!-- Script Info -->
+            <div class="card" style="padding: 18px 20px;">
+              <div class="card-title" style="margin-bottom: 12px; font-size: 13px;">
+                <span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-faint);">code</span>
+                scannerweb.py v2
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between;"><span style="color: var(--text-faint);">Python</span><span style="color: var(--text);">3.8+</span></div>
+                <div style="border-top: 1px solid var(--border); padding-top: 8px;">
+                  <p style="color: var(--text-faint); font-weight: 700; margin: 0 0 6px;">Tools Required</p>
+                  <div class="mono" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; font-size: 11px; color: var(--text-muted);">
+                    <span>nmap</span><span>nikto</span><span>httpx</span><span>ffuf</span>
+                    <span>testssl.sh</span><span>subfinder</span><span>amass</span><span>gobuster</span>
+                    <span>dirsearch</span><span>dirb</span>
+                  </div>
+                </div>
+                <div style="background: #0b1220; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 4px;">
+                  <p class="mono" style="font-size: 10.5px; color: #22c55e; margin: 0 0 3px;">python3 scannerweb.py target.com</p>
+                  <p class="mono" style="font-size: 10.5px; color: #22c55e; margin: 0;">python3 scannerweb.py 10.0.0.1 --skip-subdomain</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── RIGHT: Active Scans + History ── -->
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+
+            <!-- Active Scans Panel -->
+            <div id="active-scans-panel" style="display: flex; flex-direction: column; gap: 16px;">
+              <div id="no-scans-placeholder" class="card empty-state">
+                <span class="material-symbols-outlined">radar</span>
+                <div class="empty-state-title">No active scans</div>
+                <div class="empty-state-sub">Add targets on the left and click Launch Scan to get started.</div>
+              </div>
+            </div>
+
+            <!-- Scan History -->
+            <div class="card" style="padding: 20px 22px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                <div class="card-title">
+                  <span class="material-symbols-outlined ico-bullet ms-fill">history</span>
+                  Recent Scans
+                </div>
+                <button style="font-size: 12px; color: var(--primary); background: none; border: none; cursor: pointer; font-weight: 600;">View all →</button>
+              </div>
+              <div style="overflow-x: auto;">
+                <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr>
+                      <th style="padding-right: 16px;">Target</th>
+                      <th style="padding-right: 16px;">Profile</th>
+                      <th style="padding-right: 16px;">Started</th>
+                      <th style="padding-right: 16px;">Duration</th>
+                      <th style="padding-right: 16px;">Findings</th>
+                      <th style="padding-right: 16px;">Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="history-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ Scripts ============ -->
+<script>
+// ── Theme (read from localStorage as in shell.js) ──
+try { const t = localStorage.getItem('ofsec.theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch(e) {}
+
+// ── Sidebar collapse ──
+document.getElementById('rail-collapse').addEventListener('click', () => {
+  const shell = document.querySelector('.shell');
+  const collapsed = shell.classList.toggle('rail-collapsed');
+  document.getElementById('rail-collapse-icon').textContent = collapsed ? 'chevron_right' : 'chevron_left';
+});
+document.getElementById('rail-collapse-top').addEventListener('click', () => {
+  const shell = document.querySelector('.shell');
+  const collapsed = shell.classList.toggle('rail-collapsed');
+  const ic = document.getElementById('rail-collapse-icon');
+  if (ic) ic.textContent = collapsed ? 'chevron_right' : 'chevron_left';
+});
+
+// ── Helpers ──
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Scan profile radio ──
+document.querySelectorAll('input[name="scan-profile"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.querySelectorAll('[data-profile]').forEach(l => l.classList.remove('selected'));
+    document.querySelector(`[data-profile="${radio.value}"]`).classList.add('selected');
+    const custom = document.getElementById('custom-modules');
+    if (custom) custom.style.display = radio.value === 'custom' ? 'flex' : 'none';
+  });
+});
+
+// ── Advanced options ──
+function toggleAdv(){
+  const box = document.getElementById('adv-options');
+  const ico = document.getElementById('adv-icon');
+  const open = box.style.display !== 'none';
+  box.style.display = open ? 'none' : 'flex';
+  if (ico) ico.textContent = open ? 'expand_more' : 'expand_less';
+}
+
+// ── CLI preview ──
+function updateCLI(){
+  const t  = targetQueue[0] || (document.getElementById('inp-target')||{}).value || '<target>';
+  const w  = (document.getElementById('inp-wordlist')||{}).value || '';
+  const th = (document.getElementById('inp-threads') ||{}).value || '50';
+  const o  = (document.getElementById('inp-output')  ||{}).value || '';
+  const ss = (document.getElementById('skip-subdomain')||{}).checked;
+  const sl = (document.getElementById('skip-ssl')      ||{}).checked;
+  const sf = (document.getElementById('skip-fuzz')     ||{}).checked;
+  let cmd = `python3 scannerweb.py ${t}`;
+  if (w)  cmd += ` -w ${w}`;
+  if (th !== '50') cmd += ` -t ${th}`;
+  if (o)  cmd += ` -o ${o}`;
+  if (ss) cmd += ` --skip-subdomain`;
+  if (sl) cmd += ` --skip-ssl`;
+  if (sf) cmd += ` --skip-fuzz`;
+  if (targetQueue.length > 1) cmd += `  # (+${targetQueue.length - 1} more targets)`;
+  const el = document.getElementById('cli-preview');
+  if (el) el.textContent = cmd;
+}
+['inp-target','inp-wordlist','inp-output','skip-subdomain','skip-ssl','skip-fuzz'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) { el.addEventListener('input', updateCLI); el.addEventListener('change', updateCLI); }
+});
+
+// ── Target queue ──
+let targetQueue = [];
+function renderQueueUI(){
+  const list  = document.getElementById('queue-list');
+  const wrap  = document.getElementById('target-queue');
+  const count = document.getElementById('queue-count');
+  const label = document.getElementById('launch-label');
+  count.textContent = targetQueue.length;
+  if (label) label.textContent = targetQueue.length > 1 ? ` (${targetQueue.length} targets)` : '';
+  if (targetQueue.length === 0) { wrap.style.display = 'none'; list.innerHTML = ''; return; }
+  wrap.style.display = 'flex';
+  list.innerHTML = targetQueue.map((t, i) => `
+    <div style="display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:8px; background: var(--surface-2); border: 1px solid var(--border);">
+      <span class="material-symbols-outlined" style="font-size:14px; color: var(--text-faint);">language</span>
+      <span class="mono" style="flex:1; font-size:12px; color: var(--text); overflow:hidden; text-overflow:ellipsis;">${esc(t)}</span>
+      <button onclick="removeTarget(${i})" style="background:none; border:none; cursor:pointer; color: var(--text-faint); display:flex; align-items:center;">
+        <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+      </button>
+    </div>`).join('');
+  updateCLI();
+}
+function addTarget(){
+  const inp = document.getElementById('inp-target');
+  const val = inp.value.trim();
+  if (!val) return;
+  if (targetQueue.includes(val)) { inp.style.borderColor = 'var(--warn)'; setTimeout(() => inp.style.borderColor = '', 1500); return; }
+  targetQueue.push(val);
+  inp.value = '';
+  renderQueueUI();
+}
+function removeTarget(idx){ targetQueue.splice(idx, 1); renderQueueUI(); }
+function clearQueue(){ targetQueue = []; renderQueueUI(); }
+document.getElementById('inp-target').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); addTarget(); }
+});
+
+// ── Concurrency ──
+let maxConcurrent = 3;
+function changeConcurrency(delta){
+  maxConcurrent = Math.max(1, Math.min(10, maxConcurrent + delta));
+  document.getElementById('concurrency-val').textContent = maxConcurrent;
+  drainQueue();
+}
+
+// ── Scan steps ──
+const STEPS = [
+  { icon:'manage_search', label:'Subdomain Enum' },
+  { icon:'verified',      label:'httpx Validate' },
+  { icon:'network_ping',  label:'Nmap Port Scan' },
+  { icon:'security',      label:'Nmap Vuln Scripts' },
+  { icon:'http',          label:'httpx Tech Detection' },
+  { icon:'lock',          label:'SSL/TLS Analysis' },
+  { icon:'folder_open',   label:'Directory Enum' },
+  { icon:'bug_report',    label:'Nikto Web Scan' },
+  { icon:'blur_on',       label:'ffuf Fuzzing' },
+  { icon:'summarize',     label:'Generating Report' },
+];
+function renderStepsHTML(activeIdx){
+  return STEPS.map((s, i) => {
+    const st = i < activeIdx ? 'done' : i === activeIdx ? 'active' : 'idle';
+    const bg   = st === 'done' ? 'rgba(34,197,94,0.08)' : st === 'active' ? 'var(--primary-soft-2)' : '';
+    const ico  = st === 'done' ? 'check_circle' : s.icon;
+    const icoC = st === 'done' ? '#22c55e' : st === 'active' ? 'var(--primary)' : 'var(--text-faint)';
+    const badge = st === 'done'
+      ? `<span style="font-size:11px; font-weight:600; color:#22c55e;">Done</span>`
+      : st === 'active'
+      ? `<span style="font-size:11px; font-weight:600; color: var(--primary); animation: pulse 2s infinite;">Running…</span>`
+      : `<span style="font-size:11px; color: var(--text-faint);">Waiting</span>`;
+    return `<div style="display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:7px; background:${bg};">
+      <span class="material-symbols-outlined" style="font-size:18px; color:${icoC}; ${st === 'done' ? "font-variation-settings: 'FILL' 1;" : ''}">${ico}</span>
+      <div style="flex:1; min-width:0;">
+        <p style="font-size:12px; font-weight:600; color: ${st === 'idle' ? 'var(--text-faint)' : 'var(--text)'}; margin:0;">${s.label}</p>
+      </div>
+      ${badge}
+    </div>`;
+  }).join('');
+}
+
+// ── Status pill ──
+function statusPill(s){
+  const map = {
+    completed: ['status-completed','check_circle','Completed'],
+    running:   ['status-running','radar','Running'],
+    killed:    ['status-killed','cancel','Killed'],
+    queued:    ['status-queued','schedule','Queued'],
+  };
+  const [cls, ico, label] = map[s] || ['status-failed','error','Failed'];
+  return `<span class="status-pill ${cls}"><span class="material-symbols-outlined">${ico}</span>${label}</span>`;
+}
+
+// ── History (mocked) ──
+const MOCK_HISTORY = [
+  { id:'SCN-487', target:'api.bsi.local',          profile:'Full',   started:'26-May 09:42', dur:'32m', findings:8, status:'completed' },
+  { id:'SCN-486', target:'mmksi-microsite.id',     profile:'Quick',  started:'26-May 09:10', dur:'6m',  findings:2, status:'completed' },
+  { id:'SCN-485', target:'10.20.4.0/24',           profile:'Full',   started:'26-May 08:55', dur:'—',   findings:0, status:'running' },
+  { id:'SCN-484', target:'hris.ktb.internal',      profile:'Custom', started:'25-May 17:31', dur:'14m', findings:5, status:'completed' },
+  { id:'SCN-483', target:'staging.dnet.mmksi.id',  profile:'Full',   started:'25-May 16:02', dur:'—',   findings:0, status:'killed' },
+  { id:'SCN-482', target:'vts.mmksi.id',           profile:'Quick',  started:'25-May 14:48', dur:'7m',  findings:1, status:'completed' },
+  { id:'SCN-481', target:'supplier.ktb.com',       profile:'Full',   started:'25-May 11:20', dur:'—',   findings:0, status:'failed' },
+];
+function renderHistory(rows){
+  const tbody = document.getElementById('history-body');
+  if (!rows || !rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:32px 0; text-align:center; color: var(--text-faint); font-size:13px;">
+      <span class="material-symbols-outlined" style="display:block; font-size:32px; margin-bottom:8px; opacity:0.4;">radar</span>
+      No scans yet. Configure targets and click Launch Scan.
+    </td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono" style="font-size:12px; color: var(--text); padding-right:16px;">${esc(r.target)}</td>
+      <td style="padding-right:16px;">${esc(r.profile)}</td>
+      <td class="mono" style="font-size:12px; padding-right:16px;">${esc(r.started)}</td>
+      <td class="mono" style="font-size:12px; padding-right:16px;">${esc(r.dur)}</td>
+      <td style="font-weight:700; color: ${r.findings > 0 ? 'var(--sev-high)' : 'var(--text-faint)'}; padding-right:16px;">${r.findings}</td>
+      <td style="padding-right:16px;">${statusPill(r.status)}</td>
+      <td><a href="#" style="color: var(--text-faint);"><span class="material-symbols-outlined" style="font-size:16px;">open_in_new</span></a></td>
+    </tr>`).join('');
+}
+
+// ── Active scan cards (mock, local-only) ──
+const activeScanCards = new Map();
+let localIdCounter = 0;
+let pendingQueue   = [];
+let runningCount   = 0;
+
+function updatePlaceholder(){
+  const ph = document.getElementById('no-scans-placeholder');
+  if (ph) ph.style.display = (activeScanCards.size === 0 && pendingQueue.length === 0) ? '' : 'none';
+}
+
+function createScanCard(localId, target){
+  const panel = document.getElementById('active-scans-panel');
+  const card = document.createElement('div');
+  card.id = `scan-card-${localId}`;
+  card.className = 'scan-card';
+  card.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border);">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        <span class="material-symbols-outlined" id="card-ico-${localId}" style="color: var(--primary); font-size:22px; animation: spin 1.2s linear infinite;">radar</span>
+        <div style="min-width:0;">
+          <p class="mono" style="font-size:13px; font-weight:700; color: var(--text); margin:0;">${esc(target)}</p>
+          <p id="card-phase-${localId}" style="font-size:11px; color: var(--text-faint); margin:0;">Starting…</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+        <span id="card-badge-${localId}" class="status-pill status-running">
+          <span class="material-symbols-outlined">radar</span>Running
+        </span>
+        <button onclick="killScanCard(${localId})" id="card-kill-${localId}" class="btn btn-danger btn-sm">
+          <span class="material-symbols-outlined">stop_circle</span>Kill
+        </button>
+      </div>
+    </div>
+    <div style="padding:12px 18px 6px;">
+      <div style="display:flex; justify-content:space-between; font-size:11px; color: var(--text-faint); margin-bottom:4px;">
+        <span>Progress</span><span id="card-pct-${localId}">0%</span>
+      </div>
+      <div style="height:5px; border-radius:999px; background: var(--surface-2); overflow:hidden;">
+        <div id="card-bar-${localId}" style="height:100%; border-radius:999px; background: var(--primary); width:0%; transition: width 0.7s;"></div>
+      </div>
+    </div>
+    <div style="padding:6px 18px 10px;">
+      <button onclick="toggleCardSteps(${localId})" style="display:flex; align-items:center; gap:4px; background:none; border:none; cursor:pointer; color: var(--text-faint); font-size:11px;">
+        <span class="material-symbols-outlined" id="card-steps-icon-${localId}" style="font-size:15px;">expand_more</span>
+        <span id="card-steps-label-${localId}">Show steps</span>
+      </button>
+      <div id="card-steps-${localId}" style="display:none; margin-top:8px; flex-direction:column; gap:2px;">
+        ${renderStepsHTML(0)}
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 18px;">
+        <button onclick="toggleCardTerminal(${localId})" style="display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer; color: var(--text-muted); font-size:12px; font-weight:600;">
+          <span class="material-symbols-outlined" style="font-size:15px;">terminal</span>
+          Live Output
+          <span class="material-symbols-outlined" id="card-term-icon-${localId}" style="font-size:15px;">expand_more</span>
+        </button>
+      </div>
+      <div id="card-terminal-${localId}" class="terminal" style="display:none; background:#0b1220; padding:8px 16px 12px; max-height:180px; overflow-y:auto;">
+        <div class="log-dim">─── scannerweb.py · ${esc(target)} ───</div>
+        <div class="log-dim">Starting scan…</div>
+        <div id="card-cursor-${localId}" class="cursor-blink" style="display:inline-block; width:8px; height:12px; background:#94a3b8; margin-left:2px; vertical-align:middle;"></div>
+      </div>
+    </div>`;
+  const ph = document.getElementById('no-scans-placeholder');
+  panel.insertBefore(card, ph);
+  updatePlaceholder();
+  return card;
+}
+
+function toggleCardSteps(localId){
+  const el = document.getElementById(`card-steps-${localId}`);
+  const ico = document.getElementById(`card-steps-icon-${localId}`);
+  const lbl = document.getElementById(`card-steps-label-${localId}`);
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'flex';
+  ico.textContent = open ? 'expand_more' : 'expand_less';
+  lbl.textContent = open ? 'Show steps' : 'Hide steps';
+}
+function toggleCardTerminal(localId){
+  const el  = document.getElementById(`card-terminal-${localId}`);
+  const ico = document.getElementById(`card-term-icon-${localId}`);
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : '';
+  ico.textContent = open ? 'expand_more' : 'expand_less';
+}
+function cardTermLog(localId, msg, cls='log-dim'){
+  const box = document.getElementById(`card-terminal-${localId}`);
+  if (!box) return;
+  const cur = document.getElementById(`card-cursor-${localId}`);
+  const d = document.createElement('div'); d.className = cls; d.textContent = msg;
+  cur ? box.insertBefore(d, cur) : box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setCardBadge(localId, state){
+  const badge = document.getElementById(`card-badge-${localId}`);
+  if (!badge) return;
+  const m = {
+    running:   ['status-running','radar','Running'],
+    completed: ['status-completed','check_circle','Completed'],
+    failed:    ['status-failed','error','Failed'],
+    killed:    ['status-killed','cancel','Killed'],
+  };
+  const [cls, ico, label] = m[state] || m.running;
+  badge.className = `status-pill ${cls}`;
+  badge.innerHTML = `<span class="material-symbols-outlined">${ico}</span>${label}`;
+}
+
+function finalizeCard(localId, state){
+  const card = activeScanCards.get(localId);
+  if (!card) return;
+  const ico = document.getElementById(`card-ico-${localId}`);
+  if (ico) {
+    ico.style.animation = '';
+    ico.textContent = state === 'completed' ? 'check_circle' : state === 'killed' ? 'cancel' : 'error';
+    ico.style.color   = state === 'completed' ? '#22c55e' : state === 'killed' ? 'var(--warn)' : 'var(--sev-high)';
+  }
+  const killBtn = document.getElementById(`card-kill-${localId}`);
+  if (killBtn) killBtn.style.display = 'none';
+  const cur = document.getElementById(`card-cursor-${localId}`);
+  if (cur) cur.style.display = 'none';
+  setCardBadge(localId, state);
+  if (card.simTimer) clearInterval(card.simTimer);
+  runningCount--;
+  activeScanCards.delete(localId);
+  drainQueue();
+}
+
+function killScanCard(localId){
+  cardTermLog(localId, '[!] Scan killed by user.', 'log-warn');
+  finalizeCard(localId, 'killed');
+}
+
+// ── Simulated scan runner (frontend-only mock) ──
+function startOneScan(localId, target, config){
+  const card = activeScanCards.get(localId);
+  if (!card) return;
+  runningCount++;
+  setCardBadge(localId, 'running');
+  const phEl = document.getElementById(`card-phase-${localId}`);
+  cardTermLog(localId, `[+] Scan started — local id: ${localId}`, 'log-ok');
+  cardTermLog(localId, `[+] Target: ${target}  |  Profile: ${config.profile}`, 'log-ok');
+
+  let progress = 0;
+  let stepIdx  = 0;
+  card.simTimer = setInterval(() => {
+    progress = Math.min(100, progress + Math.random() * 6 + 2);
+    const bar = document.getElementById(`card-bar-${localId}`);
+    const pct = document.getElementById(`card-pct-${localId}`);
+    if (bar) bar.style.width = progress + '%';
+    if (pct) pct.textContent = Math.round(progress) + '%';
+    const newIdx = Math.min(STEPS.length - 1, Math.floor(progress / (100 / STEPS.length)));
+    if (newIdx !== stepIdx) {
+      stepIdx = newIdx;
+      if (phEl) phEl.textContent = STEPS[stepIdx].label;
+      cardTermLog(localId, `[INF] Phase: ${STEPS[stepIdx].label}`, 'log-info');
+      const stepsEl = document.getElementById(`card-steps-${localId}`);
+      if (stepsEl) stepsEl.innerHTML = renderStepsHTML(stepIdx);
+    }
+    if (progress >= 100) {
+      cardTermLog(localId, '[✓] Scan completed!', 'log-ok');
+      const stepsEl = document.getElementById(`card-steps-${localId}`);
+      if (stepsEl) stepsEl.innerHTML = renderStepsHTML(STEPS.length);
+      finalizeCard(localId, 'completed');
+    }
+  }, 800);
+}
+
+function drainQueue(){
+  while (pendingQueue.length > 0 && runningCount < maxConcurrent) {
+    const item = pendingQueue.shift();
+    startOneScan(item.localId, item.target, item.config);
+  }
+  updatePlaceholder();
+}
+
+function launchQueue(){
+  const inputVal = (document.getElementById('inp-target') || {}).value || '';
+  const allTargets = [...targetQueue];
+  if (inputVal.trim() && !allTargets.includes(inputVal.trim())) allTargets.push(inputVal.trim());
+  if (allTargets.length === 0) {
+    const inp = document.getElementById('inp-target');
+    inp.style.borderColor = 'var(--sev-high)';
+    inp.focus();
+    setTimeout(() => inp.style.borderColor = '', 2000);
+    return;
+  }
+  const config = {
+    profile:  (document.querySelector('input[name="scan-profile"]:checked') || {}).value || 'full',
+    threads:  parseInt((document.getElementById('inp-threads') || {}).value) || 50,
+    wordlist: (document.getElementById('inp-wordlist') || {}).value || null,
+    outputDir:(document.getElementById('inp-output')   || {}).value || null,
+    projectId:(document.getElementById('inp-project')  || {}).value || null,
+    skipSub:  (document.getElementById('skip-subdomain') || {}).checked || false,
+    skipSsl:  (document.getElementById('skip-ssl')       || {}).checked || false,
+    skipFuzz: (document.getElementById('skip-fuzz')      || {}).checked || false,
+  };
+  document.getElementById('inp-target').value = '';
+  targetQueue = [];
+  renderQueueUI();
+  allTargets.forEach(target => {
+    const localId = ++localIdCounter;
+    createScanCard(localId, target);
+    activeScanCards.set(localId, { target, simTimer: null });
+    pendingQueue.push({ localId, target, config });
+  });
+  updatePlaceholder();
+  drainQueue();
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  renderQueueUI();
+  renderHistory(MOCK_HISTORY);
+  updateCLI();
+});
+</script>
+</body>
+</html>

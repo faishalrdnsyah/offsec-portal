@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>User Detail — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  .crumb { display:inline-flex; align-items:center; gap: 6px; font-size: 12.5px; color: var(--text-muted); text-decoration: none; }
+  .crumb:hover { color: var(--text); }
+  .crumb .material-symbols-outlined { font-size: 16px; }
+
+  .pill-active   { color: #10b981; background: rgba(16,185,129,0.18); }
+  .pill-inactive { color: var(--text-muted); background: var(--surface-2); border: 1px solid var(--border); }
+  .pill-locked   { color: #ef4444; background: rgba(220,38,38,0.18); }
+
+  .avatar-lg {
+    width: 76px; height: 76px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 24px; flex-shrink: 0;
+    box-shadow: 0 6px 18px -6px rgba(0,0,0,0.35);
+    letter-spacing: -0.01em;
+  }
+
+  .role-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 4px 11px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+  }
+  .role-chip .material-symbols-outlined { font-size: 15px; }
+
+  .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+  @media (max-width: 1080px) { .detail-grid { grid-template-columns: 1fr; } }
+
+  .section-card { padding: 20px 22px; }
+  .section-h { display:flex; align-items:center; gap: 10px; margin-bottom: 14px; }
+  .section-h .ic {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--primary-soft); color: var(--primary);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .section-h .ic .material-symbols-outlined { font-size: 17px; }
+  .section-h .t { font-size: 14px; font-weight: 700; color: var(--text); }
+
+  .meta-row { display:flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+  .meta-row:last-child { border-bottom: 0; }
+  .meta-row .k { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .meta-row .v { font-size: 13px; color: var(--text); text-align: right; max-width: 60%; overflow-wrap: anywhere; }
+
+  .stat-tile {
+    padding: 14px 16px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 10px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .stat-tile .lbl { font-size: 10.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-tile .val { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 22px; letter-spacing: -0.02em; line-height: 1.1; }
+
+  /* Timeline */
+  .tl { display:flex; flex-direction: column; gap: 0; position: relative; }
+  .tl::before { content: ""; position: absolute; left: 11px; top: 6px; bottom: 6px; width: 1px; background: var(--border); }
+  .tl-item { display:flex; gap: 12px; padding: 9px 0; position: relative; }
+  .tl-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink: 0; z-index: 1; }
+  .tl-dot.primary { border-color: var(--primary); background: var(--primary-soft); }
+  .tl-dot.info { border-color: var(--info); background: rgba(59,130,246,0.18); }
+  .tl-dot.accent { border-color: var(--accent); background: rgba(16,185,129,0.18); }
+  .tl-dot .material-symbols-outlined { font-size: 13px; color: var(--text-muted); }
+  .tl-dot.primary .material-symbols-outlined { color: var(--primary); }
+  .tl-dot.info .material-symbols-outlined { color: var(--info); }
+  .tl-dot.accent .material-symbols-outlined { color: var(--accent); }
+  .tl-body { flex: 1; min-width: 0; padding-top: 1px; }
+  .tl-body .head { font-size: 12.5px; color: var(--text); font-weight: 500; }
+  .tl-body .head strong { font-weight: 700; }
+  .tl-body .sub { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+  .tl-body code { font-family: 'JetBrains Mono', monospace; background: var(--surface-2); border: 1px solid var(--border); padding: 0 5px; border-radius: 3px; font-size: 11px; color: var(--text-muted); }
+
+  /* Project rows */
+  .proj-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px;
+    transition: background 0.1s;
+    cursor: pointer; text-decoration: none; color: inherit;
+  }
+  .proj-row:hover { background: var(--surface-2); }
+  .proj-row .activity-chip {
+    display: inline-flex; padding: 2px 7px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.03em; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(168,85,247,0.18); color: #a855f7;
+  }
+  .proj-row .progress-bar { width: 60px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .proj-row .progress-fill { height: 100%; background: var(--accent); }
+
+  /* Permissions matrix */
+  .perm-grid { display:grid; grid-template-columns: 1fr 30px 30px 30px 30px; gap: 4px 12px; align-items: center; }
+  .perm-grid .col-h { font-size: 10px; font-weight: 700; color: var(--text-faint); text-align: center; text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .perm-grid .col-h.first { text-align: left; }
+  .perm-grid .row-label { font-size: 12.5px; color: var(--text); padding: 6px 0; }
+  .perm-grid .perm-cell { display:flex; align-items:center; justify-content:center; padding: 6px 0; }
+  .perm-grid .perm-cell .material-symbols-outlined { font-size: 16px; color: var(--accent); }
+  .perm-grid .perm-cell.off .material-symbols-outlined { color: var(--text-faint); }
+</style>
+</head>
+<body data-page="user-detail">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1280px; margin: 0 auto;">
+
+        <a href="offsec-users.html" class="crumb" style="margin-bottom: 14px;">
+          <span class="material-symbols-outlined">arrow_back</span>
+          All users
+        </a>
+
+        <!-- Profile header -->
+        <div class="card" style="padding: 22px 24px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-bottom: 18px;">
+          <span class="avatar-lg" id="u-avatar">—</span>
+          <div style="flex: 1; min-width: 0;">
+            <div style="display:flex; align-items:center; gap: 10px; flex-wrap: wrap;">
+              <h1 id="u-name" style="font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin: 0; color: var(--text); line-height: 1.2;">—</h1>
+              <span class="pill" id="u-status-pill"><span class="dot"></span><span id="u-status">—</span></span>
+            </div>
+            <div style="display:flex; align-items:center; gap: 12px; margin-top: 7px; flex-wrap: wrap; font-size: 13px; color: var(--text-muted);">
+              <span style="display:inline-flex; align-items:center; gap: 5px;"><span class="material-symbols-outlined" style="font-size:15px">alternate_email</span><span class="mono" id="u-username">—</span></span>
+              <span style="display:inline-flex; align-items:center; gap: 5px;"><span class="material-symbols-outlined" style="font-size:15px">mail</span><span class="mono" id="u-email">—</span></span>
+              <span class="role-chip" id="u-role">—</span>
+            </div>
+          </div>
+          <div style="display:flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-ghost"><span class="material-symbols-outlined">key</span>Reset password</button>
+            <button class="btn btn-soft" id="lock-btn"><span class="material-symbols-outlined">lock</span>Lock</button>
+            <a class="btn btn-primary" id="edit-link" href="offsec-user-create.html"><span class="material-symbols-outlined">edit</span>Edit</a>
+          </div>
+        </div>
+
+        <!-- Stat tiles -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px;">
+          <div class="stat-tile"><div class="lbl">Projects assigned</div><div class="val" id="s-projects">—</div></div>
+          <div class="stat-tile"><div class="lbl">Last seen</div><div class="val" id="s-lastseen" style="font-size: 14px; font-weight: 700;">—</div></div>
+          <div class="stat-tile"><div class="lbl">Member since</div><div class="val" id="s-created" style="font-size: 14px; font-weight: 700;">—</div></div>
+          <div class="stat-tile"><div class="lbl">MFA</div><div class="val" id="s-mfa" style="font-size: 14px; font-weight: 700;">—</div></div>
+        </div>
+
+        <div class="detail-grid">
+          <!-- ============ Main column ============ -->
+          <div style="display:flex; flex-direction: column; gap: 18px;">
+
+            <!-- Recent activity -->
+            <div class="card section-card">
+              <div class="section-h">
+                <div class="ic"><span class="material-symbols-outlined">history</span></div>
+                <div class="t">Recent activity</div>
+              </div>
+              <div class="tl" id="activity-tl"></div>
+            </div>
+
+            <!-- Assigned projects -->
+            <div class="card section-card">
+              <div class="section-h">
+                <div class="ic"><span class="material-symbols-outlined">folder_open</span></div>
+                <div class="t">Assigned projects</div>
+              </div>
+              <div id="assigned-projects" style="display:flex; flex-direction: column; gap: 2px;"></div>
+            </div>
+
+          </div>
+
+          <!-- ============ Sidebar ============ -->
+          <div style="display:flex; flex-direction: column; gap: 18px;">
+
+            <!-- Properties -->
+            <div class="card section-card">
+              <div class="section-h">
+                <div class="ic"><span class="material-symbols-outlined">tune</span></div>
+                <div class="t">Properties</div>
+              </div>
+              <div>
+                <div class="meta-row"><span class="k">User ID</span><span class="v mono" id="m-id">—</span></div>
+                <div class="meta-row"><span class="k">Name</span><span class="v" id="m-name">—</span></div>
+                <div class="meta-row"><span class="k">Username</span><span class="v mono" id="m-username">—</span></div>
+                <div class="meta-row"><span class="k">Email</span><span class="v mono" id="m-email">—</span></div>
+                <div class="meta-row"><span class="k">Role</span><span class="v" id="m-role">—</span></div>
+                <div class="meta-row"><span class="k">Status</span><span class="v" id="m-status">—</span></div>
+                <div class="meta-row"><span class="k">MFA</span><span class="v" id="m-mfa">—</span></div>
+                <div class="meta-row"><span class="k">Created</span><span class="v mono" id="m-created">—</span></div>
+              </div>
+            </div>
+
+            <!-- Permissions -->
+            <div class="card section-card">
+              <div class="section-h">
+                <div class="ic"><span class="material-symbols-outlined">shield_person</span></div>
+                <div class="t">Permissions</div>
+              </div>
+              <div class="perm-grid" id="perm-grid">
+                <div class="col-h first">Resource</div>
+                <div class="col-h">R</div>
+                <div class="col-h">C</div>
+                <div class="col-h">U</div>
+                <div class="col-h">D</div>
+              </div>
+              <p style="font-size: 11px; color: var(--text-faint); margin-top: 10px;">
+                Derived from role · <span class="mono" id="perm-role-tag">—</span>
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script src="users-data.js"></script>
+<script>
+const STATUS_PILL = { 'Active':'pill-active', 'Inactive':'pill-inactive', 'Locked':'pill-locked' };
+
+const ACTIVITY_TEMPLATES = {
+  offsec: [
+    { ic:'bug_report',  cls:'primary', head:'Created finding <code>FND-1042</code> · SQL Injection on /api/v2/users/search', sub:'Today · 09:42' },
+    { ic:'edit',        cls:'',        head:'Updated remediation on <code>FND-1041</code> after fix verification',          sub:'Yesterday · 17:08' },
+    { ic:'check',       cls:'accent',  head:'Closed <code>FND-1034</code> as resolved',                                      sub:'2 days ago' },
+    { ic:'folder_open', cls:'info',    head:'Joined project <strong>BSI Core Infra VA — Q2</strong>',                        sub:'12 May 2026' },
+    { ic:'login',       cls:'',        head:'Signed in from <code>192.168.10.18</code> · Chrome on macOS',                   sub:'12 May 2026 · 08:11' },
+  ],
+  'app-pic': [
+    { ic:'mark_email_read', cls:'info',    head:'Acknowledged finding <code>FND-1041</code>',                                     sub:'Today · 11:05' },
+    { ic:'forum',           cls:'',        head:'Commented on <code>FND-1040</code>: requested clarification on payload',         sub:'Yesterday · 15:30' },
+    { ic:'event_available',  cls:'accent',  head:'Approved scope for project <strong>BSI Core Infra VA — Q2</strong>',             sub:'18 May 2026' },
+    { ic:'login',           cls:'',        head:'Signed in from corporate VPN',                                                    sub:'18 May 2026 · 09:00' },
+  ],
+  sm: [
+    { ic:'gavel',          cls:'primary', head:'Approved risk acceptance <code>RA-2026-014</code> · MMKSI - Microsite',           sub:'Today · 10:12' },
+    { ic:'review',         cls:'',        head:'Reviewed 4 findings in <strong>KTB HRIS Mobile Pentest</strong>',                  sub:'Yesterday · 16:45' },
+    { ic:'workspace_premium', cls:'accent', head:'Signed off Q1 VAPT report',                                                       sub:'30 Apr 2026' },
+    { ic:'login',          cls:'',        head:'Signed in from corporate office network',                                          sub:'30 Apr 2026 · 08:21' },
+  ],
+  dh: [
+    { ic:'workspace_premium', cls:'primary', head:'Final approval on risk acceptance <code>RA-2026-009</code>',                     sub:'Yesterday · 17:30' },
+    { ic:'description',    cls:'',        head:'Reviewed monthly VAPT executive summary',                                          sub:'21 May 2026' },
+    { ic:'login',          cls:'',        head:'Signed in from corporate office network',                                          sub:'20 May 2026 · 07:55' },
+  ],
+  appsec: [
+    { ic:'shield',         cls:'primary', head:'Validated remediation for <code>FND-1027</code> · TLS 1.0/1.1 disabled',          sub:'Today · 11:55' },
+    { ic:'rule',           cls:'',        head:'Added detection rule <code>OWASP CRS 942-100</code> to staging WAF',               sub:'Yesterday · 14:02' },
+    { ic:'menu_book',      cls:'info',    head:'Updated SDLC secure-coding checklist (v1.7)',                                     sub:'22 May 2026' },
+    { ic:'login',          cls:'',        head:'Signed in from <code>10.42.18.205</code>',                                         sub:'22 May 2026 · 09:00' },
+  ],
+};
+
+const PERMISSIONS_BY_ROLE = {
+  // R C U D for: Projects, Findings, Risk Acceptance, Users, Master Data
+  offsec:  { 'Projects': [1,0,1,0], 'Findings': [1,1,1,1], 'Risk Acceptance': [1,0,0,0], 'Users': [1,0,0,0], 'Master Data': [1,0,0,0] },
+  'app-pic':{ 'Projects': [1,0,1,0], 'Findings': [1,0,1,0], 'Risk Acceptance': [1,1,1,0], 'Users': [1,0,0,0], 'Master Data': [1,0,0,0] },
+  sm:      { 'Projects': [1,1,1,1], 'Findings': [1,0,1,0], 'Risk Acceptance': [1,0,1,0], 'Users': [1,0,1,0], 'Master Data': [1,1,1,0] },
+  dh:      { 'Projects': [1,1,1,1], 'Findings': [1,0,1,0], 'Risk Acceptance': [1,0,1,1], 'Users': [1,1,1,1], 'Master Data': [1,1,1,1] },
+  appsec:  { 'Projects': [1,0,1,0], 'Findings': [1,1,1,0], 'Risk Acceptance': [1,0,0,0], 'Users': [1,0,0,0], 'Master Data': [1,0,1,0] },
+};
+const PERM_COLS = ['R','C','U','D'];
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }) +
+         ' · ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+
+function render() {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id') || USERS[0].id;
+  const u = USERS.find(x => x.id === id) || USERS[0];
+  const r = roleById(u.role);
+
+  document.title = `${u.name} — Offensive Sec Portal`;
+
+  // Avatar
+  const av = document.getElementById('u-avatar');
+  av.textContent = userInitials(u.name);
+  av.style.background = userAvatarColor(u.name);
+
+  // Header
+  document.getElementById('u-name').textContent     = u.name;
+  document.getElementById('u-username').textContent = '@' + u.username;
+  document.getElementById('u-email').textContent    = u.email;
+
+  const statusEl = document.getElementById('u-status-pill');
+  statusEl.className = 'pill ' + STATUS_PILL[u.status];
+  document.getElementById('u-status').textContent = u.status;
+
+  const roleEl = document.getElementById('u-role');
+  roleEl.style.background = r.color + '1a';
+  roleEl.style.color = r.color;
+  roleEl.style.borderColor = r.color + '40';
+  roleEl.innerHTML = `<span class="material-symbols-outlined ms-fill">${r.icon}</span>${r.name}`;
+
+  // Stat tiles
+  document.getElementById('s-projects').textContent = u.projects;
+  document.getElementById('s-lastseen').textContent = fmtDateTime(u.lastSeen);
+  document.getElementById('s-created').textContent  = fmtDate(u.created);
+  const mfaEl = document.getElementById('s-mfa');
+  mfaEl.innerHTML = u.mfa
+    ? '<span style="color:var(--accent); display:inline-flex; align-items:center; gap:6px;"><span class="material-symbols-outlined ms-fill" style="font-size:18px">verified_user</span>Enrolled</span>'
+    : '<span style="color:var(--text-faint); display:inline-flex; align-items:center; gap:6px;"><span class="material-symbols-outlined" style="font-size:18px">no_encryption</span>Not set</span>';
+
+  // Lock button label
+  const lockBtn = document.getElementById('lock-btn');
+  if (u.status === 'Locked') {
+    lockBtn.innerHTML = '<span class="material-symbols-outlined">lock_open</span>Unlock';
+  } else {
+    lockBtn.innerHTML = '<span class="material-symbols-outlined">lock</span>Lock';
+  }
+
+  // Edit link
+  document.getElementById('edit-link').href = `offsec-user-create.html?id=${u.id}`;
+
+  // Properties
+  document.getElementById('m-id').textContent       = u.id;
+  document.getElementById('m-name').textContent     = u.name;
+  document.getElementById('m-username').textContent = u.username;
+  document.getElementById('m-email').textContent    = u.email;
+  document.getElementById('m-role').textContent     = r.name;
+  document.getElementById('m-role').style.color     = r.color;
+  document.getElementById('m-status').textContent   = u.status;
+  document.getElementById('m-mfa').textContent      = u.mfa ? 'Enrolled' : 'Not enrolled';
+  document.getElementById('m-mfa').style.color      = u.mfa ? 'var(--accent)' : 'var(--text-muted)';
+  document.getElementById('m-created').textContent  = fmtDate(u.created);
+
+  // Activity
+  const acts = ACTIVITY_TEMPLATES[u.role] || ACTIVITY_TEMPLATES.offsec;
+  document.getElementById('activity-tl').innerHTML = acts.map(a => `
+    <div class="tl-item">
+      <div class="tl-dot ${a.cls}"><span class="material-symbols-outlined">${a.ic}</span></div>
+      <div class="tl-body">
+        <div class="head">${a.head}</div>
+        <div class="sub">${a.sub}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Assigned projects (simple seeded list per role)
+  const SAMPLE_PROJECTS = u.projects === 0
+    ? [{ msg:'No project assignments — this role operates across all projects.' }]
+    : [
+        { id:'PRJ-001', name:'BSI Core Infra VA — Q2', activity:'VA Infra', progress:65 },
+        { id:'PRJ-002', name:'MMKSI Microsite Pentest', activity:'VAPT', progress:90 },
+        { id:'PRJ-005', name:'KTB D-Net Interface VAPT', activity:'VAPT', progress:50 },
+      ].slice(0, Math.min(3, u.projects));
+  document.getElementById('assigned-projects').innerHTML = SAMPLE_PROJECTS.map(p => {
+    if (p.msg) return `<div style="font-size:12.5px; color: var(--text-muted); padding: 8px 4px;">${p.msg}</div>`;
+    return `
+      <a class="proj-row" href="offsec-project-detail.html?id=${p.id}">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); width: 64px;">${p.id}</span>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size: 13px; font-weight: 600; color: var(--text);">${p.name}</div>
+          <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 1px;"><span class="activity-chip">${p.activity}</span></div>
+        </div>
+        <div style="display:flex; align-items:center; gap: 8px;">
+          <div class="progress-bar"><div class="progress-fill" style="width:${p.progress}%"></div></div>
+          <span class="mono" style="font-size: 11px; color: var(--text-muted); min-width: 30px; text-align: right;">${p.progress}%</span>
+        </div>
+        <span class="material-symbols-outlined" style="color: var(--text-faint); font-size: 16px;">chevron_right</span>
+      </a>
+    `;
+  }).join('');
+
+  // Permissions matrix
+  const perms = PERMISSIONS_BY_ROLE[u.role] || {};
+  const grid = document.getElementById('perm-grid');
+  // Keep the header row already in DOM, append rows
+  grid.querySelectorAll('.row-label, .perm-cell').forEach(n => n.remove());
+  Object.entries(perms).forEach(([resource, vals]) => {
+    grid.insertAdjacentHTML('beforeend', `<div class="row-label">${resource}</div>`);
+    vals.forEach((on, i) => {
+      grid.insertAdjacentHTML('beforeend', `<div class="perm-cell${on ? '' : ' off'}"><span class="material-symbols-outlined">${on ? 'check_circle' : 'remove'}</span></div>`);
+    });
+  });
+  document.getElementById('perm-role-tag').textContent = r.short;
+}
+
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>

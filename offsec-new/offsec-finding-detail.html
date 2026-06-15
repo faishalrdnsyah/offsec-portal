@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finding Detail — Offensive Sec Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="shell.css" />
+  <style>
+    .crumb {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .crumb:hover {
+      color: var(--text);
+    }
+
+    .crumb .material-symbols-outlined {
+      font-size: 16px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pill-acceptance {
+      color: #a855f7;
+      background: rgba(168, 85, 247, 0.18);
+    }
+
+    .section-card {
+      padding: 20px 22px;
+    }
+
+    .section-h {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .section-h .ic {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .section-h .ic .material-symbols-outlined {
+      font-size: 17px;
+    }
+
+    .section-h .t {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .prose {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text);
+    }
+
+    .prose p {
+      margin: 0 0 12px;
+    }
+
+    .prose p:last-child {
+      margin-bottom: 0;
+    }
+
+    .prose code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .prose strong {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .meta-row:last-child {
+      border-bottom: 0;
+    }
+
+    .meta-row .k {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .meta-row .v {
+      font-size: 13px;
+      color: var(--text);
+      text-align: right;
+      max-width: 60%;
+      overflow-wrap: anywhere;
+    }
+
+    .cvss-display {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .cvss-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 36px;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .cvss-meter {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .cvss-meter .bar {
+      height: 8px;
+      background: var(--surface);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-top: 6px;
+    }
+
+    .cvss-meter .bar>div {
+      height: 100%;
+      transition: width 0.4s ease;
+    }
+
+    .place-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .place-chip .material-symbols-outlined {
+      font-size: 15px;
+    }
+
+    .place-chip.web {
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.12);
+      border-color: rgba(59, 130, 246, 0.25);
+    }
+
+    .place-chip.server {
+      color: #a855f7;
+      background: rgba(168, 85, 247, 0.12);
+      border-color: rgba(168, 85, 247, 0.25);
+    }
+
+    .place-chip.mobile {
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.28);
+    }
+
+    .url-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .url-box .url-text {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .url-box .copy-btn {
+      flex-shrink: 0;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 4px;
+      border-radius: 4px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+    }
+
+    .url-box .copy-btn:hover {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .url-box .copy-btn .material-symbols-outlined {
+      font-size: 15px;
+    }
+
+    .owasp-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: rgba(220, 38, 38, 0.10);
+      color: var(--primary);
+      border: 1px solid rgba(220, 38, 38, 0.20);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    /* Status switcher */
+    .status-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .status-opt {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .status-opt:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+
+    .status-opt.on {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-soft-2);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .status-opt .material-symbols-outlined {
+      font-size: 14px;
+    }
+
+    /* Timeline */
+    .tl {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+
+    .tl::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 6px;
+      bottom: 6px;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .tl-item {
+      display: flex;
+      gap: 12px;
+      padding: 8px 0;
+      position: relative;
+    }
+
+    .tl-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .tl-dot.primary {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .tl-dot.accent {
+      border-color: var(--accent);
+      background: rgba(16, 185, 129, 0.18);
+    }
+
+    .tl-dot .material-symbols-outlined {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .tl-dot.primary .material-symbols-outlined {
+      color: var(--primary);
+    }
+
+    .tl-dot.accent .material-symbols-outlined {
+      color: var(--accent);
+    }
+
+    .tl-body {
+      flex: 1;
+      min-width: 0;
+      padding-top: 1px;
+    }
+
+    .tl-body .head {
+      font-size: 12.5px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .tl-body .head strong {
+      font-weight: 700;
+    }
+
+    .tl-body .sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* ===== Comments / discussion ===== */
+    .cmt-count {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 1px 8px;
+      border-radius: 999px;
+      margin-left: auto;
+    }
+
+    .cmt-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .cmt {
+      display: flex;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 12.5px;
+      letter-spacing: 0.01em;
+    }
+
+    .avatar.sm {
+      width: 30px;
+      height: 30px;
+      font-size: 11.5px;
+    }
+
+    .cmt-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .cmt-head {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .cmt-head .name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .cmt-head .role {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 5px;
+    }
+
+    .cmt-head .time {
+      font-size: 11.5px;
+      color: var(--text-faint);
+    }
+
+    .cmt-text {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .cmt-text p {
+      margin: 0 0 8px;
+    }
+
+    .cmt-text p:last-child {
+      margin-bottom: 0;
+    }
+
+    .cmt-text code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .mention {
+      color: var(--primary);
+      background: var(--primary-soft-2);
+      font-weight: 600;
+      padding: 0 5px;
+      border-radius: 5px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .mention:hover {
+      background: var(--primary-soft);
+    }
+
+    /* Inline image attachment */
+    .cmt-attach {
+      margin-top: 10px;
+      display: inline-block;
+      max-width: 420px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--surface-2);
+      cursor: zoom-in;
+      transition: border-color 0.15s;
+    }
+
+    .cmt-attach:hover {
+      border-color: var(--border-strong);
+    }
+
+    .cmt-attach img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .cmt-attach .meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border-top: 1px solid var(--border);
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .cmt-attach .meta .material-symbols-outlined {
+      font-size: 15px;
+    }
+
+    .cmt-attach .meta .fn {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .cmt-attach .meta .sz {
+      margin-left: auto;
+      color: var(--text-faint);
+    }
+
+    .cmt-actions {
+      display: flex;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .cmt-action {
+      background: none;
+      border: 0;
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0;
+    }
+
+    .cmt-action:hover {
+      color: var(--primary);
+    }
+
+    .cmt-action .material-symbols-outlined {
+      font-size: 15px;
+    }
+
+    .cmt-reply {
+      margin-top: 14px;
+      padding-left: 18px;
+      border-left: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Composer */
+    .cmt-composer {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .composer-box {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      background: var(--surface-2);
+      transition: all 0.15s;
+    }
+
+    .composer-box:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+      background: var(--surface);
+    }
+
+    .composer-box textarea {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--text);
+      padding: 11px 13px;
+      box-sizing: border-box;
+      min-height: 44px;
+      max-height: 160px;
+    }
+
+    .composer-box textarea::placeholder {
+      color: var(--text-faint);
+    }
+
+    .composer-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 8px 6px 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .composer-tool {
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+    }
+
+    .composer-tool:hover {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .composer-tool .material-symbols-outlined {
+      font-size: 18px;
+    }
+
+    .composer-hint {
+      font-size: 11px;
+      color: var(--text-faint);
+      margin-left: 4px;
+    }
+
+    .composer-bar .btn {
+      margin-left: auto;
+    }
+
+    /* Mention autocomplete */
+    .mention-pop {
+      position: absolute;
+      z-index: 60;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: var(--shadow-popover);
+      min-width: 230px;
+      overflow: hidden;
+      padding: 4px;
+    }
+
+    .mention-opt {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 9px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    .mention-opt:hover,
+    .mention-opt.active {
+      background: var(--surface-2);
+    }
+
+    .mention-opt .nm {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .mention-opt .un {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(2, 6, 15, 0.82);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      cursor: zoom-out;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 10px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    }
+
+    .lightbox .lb-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body data-page="finding-detail">
+
+  <div class="shell">
+    <aside data-shell="sidebar"></aside>
+    <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+      <header data-shell="topbar"></header>
+
+      <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+        <div style="max-width: 1280px; margin: 0 auto;">
+
+          <a href="findings.html" class="crumb" style="margin-bottom: 14px;">
+            <span class="material-symbols-outlined">arrow_back</span>
+            All findings
+          </a>
+
+          <!-- Title block -->
+          <div
+            style="display:flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 18px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 6px;">
+                <span class="mono" id="f-id"
+                  style="font-size: 12px; color: var(--text-muted); font-weight: 600;">FND-—</span>
+                <span class="sev" id="f-sev">—</span>
+                <span class="pill" id="f-status-pill"><span class="dot"></span><span id="f-status">—</span></span>
+              </div>
+              <h1 id="f-title"
+                style="font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin: 0; color: var(--text); line-height: 1.25;">
+                Loading finding…</h1>
+              <div id="f-subtitle" style="font-size: 13px; color: var(--text-muted); margin-top: 6px;">—</div>
+            </div>
+            <div style="display:flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-ghost"><span class="material-symbols-outlined">share</span>Share</button>
+              <button class="btn btn-ghost"><span class="material-symbols-outlined">file_download</span>Export</button>
+              <a class="btn btn-soft" id="edit-link" href="finding-create.html"><span
+                  class="material-symbols-outlined">edit</span>Edit</a>
+              <button class="btn btn-primary"><span class="material-symbols-outlined">arrow_outward</span>Open
+                task</button>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <!-- ============ Main column ============ -->
+            <div style="display:flex; flex-direction: column; gap: 18px;">
+
+              <!-- CVSS + URL -->
+              <div class="card section-card">
+                <div
+                  style="display:grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 1.4fr); gap: 18px; align-items: start;">
+                  <div>
+                    <div class="section-h" style="margin-bottom: 8px;">
+                      <div class="ic"><span class="material-symbols-outlined">speed</span></div>
+                      <div class="t">CVSS Score</div>
+                    </div>
+                    <div class="cvss-display">
+                      <div class="cvss-score" id="cvss-num">—</div>
+                      <div class="cvss-meter">
+                        <div
+                          style="display:flex; justify-content:space-between; font-size: 11px; color: var(--text-muted);">
+                          <span id="cvss-sev">—</span>
+                          <span class="mono" style="color: var(--text-faint);">0 — 10</span>
+                        </div>
+                        <div class="bar">
+                          <div id="cvss-bar"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="section-h" style="margin-bottom: 8px;">
+                      <div class="ic"><span class="material-symbols-outlined">link</span></div>
+                      <div class="t">Affected URL / Asset</div>
+                    </div>
+                    <div class="url-box">
+                      <span class="material-symbols-outlined" id="url-icon"
+                        style="color: var(--text-muted); font-size: 17px;">language</span>
+                      <span class="url-text" id="f-url">—</span>
+                      <button class="copy-btn" title="Copy" onclick="copyUrl()"><span
+                          class="material-symbols-outlined">content_copy</span></button>
+                    </div>
+                    <div style="display:flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                      <span class="place-chip" id="f-place">—</span>
+                      <span class="owasp-tag" id="f-cat">—</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="card section-card">
+                <div class="section-h">
+                  <div class="ic"><span class="material-symbols-outlined">description</span></div>
+                  <div class="t">Description</div>
+                </div>
+                <div class="prose" id="f-desc">—</div>
+              </div>
+
+              <!-- Impact -->
+              <div class="card section-card">
+                <div class="section-h">
+                  <div class="ic" style="background: rgba(239,68,68,0.18); color: #ef4444;"><span
+                      class="material-symbols-outlined">warning</span></div>
+                  <div class="t">Impact &amp; Risk</div>
+                </div>
+                <div class="prose" id="f-impact">—</div>
+              </div>
+
+              <!-- Recommendation -->
+              <div class="card section-card">
+                <div class="section-h">
+                  <div class="ic" style="background: rgba(16,185,129,0.18); color: var(--accent);"><span
+                      class="material-symbols-outlined">lightbulb</span></div>
+                  <div class="t">Recommendation</div>
+                </div>
+                <div class="prose" id="f-rec">—</div>
+              </div>
+
+              <!-- Discussion / Comments -->
+              <div class="card section-card" id="comments">
+                <div class="section-h">
+                  <div class="ic" style="background: rgba(16,185,129,0.18); color: var(--accent);"><span
+                      class="material-symbols-outlined">forum</span></div>
+                  <div class="t">Discussion</div>
+                  <span class="cmt-count" id="cmt-count">3 comments</span>
+                </div>
+
+                <div class="cmt-list" id="cmt-list">
+                  <!-- Comment 1 — mention -->
+                  <div class="cmt">
+                    <div class="avatar" style="background: linear-gradient(135deg,#3b82f6,#1e40af);">AW</div>
+                    <div class="cmt-body">
+                      <div class="cmt-head">
+                        <span class="name">Ari Wibowo</span>
+                        <span class="role">Pentester</span>
+                        <span class="time">3 hours ago</span>
+                      </div>
+                      <div class="cmt-text">
+                        <p>Confirmed exploitable on the <code>/api/v2/users</code> endpoint. <a class="mention"
+                            data-mention>@Sarah Park</a> the <code>id</code> parameter is concatenated straight into the
+                          query — a single quote breaks it. <a class="mention" data-mention>@Abu Rizal Mahdi</a> can you
+                          assign this to the BSI - Infra dev team for an urgent patch?</p>
+                      </div>
+                      <div class="cmt-actions">
+                        <button class="cmt-action"><span class="material-symbols-outlined">reply</span>Reply</button>
+                        <button class="cmt-action like-btn"><span
+                            class="material-symbols-outlined">thumb_up</span>4</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Comment 2 — image attachment + mention -->
+                  <div class="cmt">
+                    <div class="avatar" style="background: linear-gradient(135deg,var(--primary),#7c1d1d);">SP</div>
+                    <div class="cmt-body">
+                      <div class="cmt-head">
+                        <span class="name">Sarah Park</span>
+                        <span class="role">Lead Analyst</span>
+                        <span class="time">2 hours ago</span>
+                      </div>
+                      <div class="cmt-text">
+                        <p>Reproduced it too, <a class="mention" data-mention>@Ari Wibowo</a>. A
+                          <code>UNION</code>-based payload leaks the DB version, the privileged user and the production
+                          schema name. Attaching the Repeater capture as proof:
+                        </p>
+                      </div>
+                      <button class="cmt-attach" data-lightbox="uploads/comment-sqli-poc.png">
+                        <img src="comment-sqli-poc.png"
+                          alt="SQL injection proof-of-concept — HTTP request and response" />
+                        <div class="meta">
+                          <span class="material-symbols-outlined">image</span>
+                          <span class="fn">sqli-poc.png</span>
+                          <span class="sz">1200 × 720 · 198 KB</span>
+                        </div>
+                      </button>
+                      <div class="cmt-actions">
+                        <button class="cmt-action"><span class="material-symbols-outlined">reply</span>Reply</button>
+                        <button class="cmt-action like-btn"><span
+                            class="material-symbols-outlined">thumb_up</span>6</button>
+                      </div>
+
+                      <!-- Reply -->
+                      <div class="cmt-reply">
+                        <div class="cmt">
+                          <div class="avatar sm" style="background: linear-gradient(135deg,#a855f7,#6b21a8);">AR</div>
+                          <div class="cmt-body">
+                            <div class="cmt-head">
+                              <span class="name">Abu Rizal Mahdi</span>
+                              <span class="role">Manager</span>
+                              <span class="time">1 hour ago</span>
+                            </div>
+                            <div class="cmt-text">
+                              <p>Thanks both. <a class="mention" data-mention>@Sarah Park</a> I've raised this to
+                                Critical and assigned the PIC. Target fix within the next patch cycle — let's track it
+                                on work item <code>#114201</code>.</p>
+                            </div>
+                            <div class="cmt-actions">
+                              <button class="cmt-action"><span
+                                  class="material-symbols-outlined">reply</span>Reply</button>
+                              <button class="cmt-action like-btn"><span
+                                  class="material-symbols-outlined">thumb_up</span>2</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Composer -->
+                <div class="cmt-composer">
+                  <div class="avatar" style="background: linear-gradient(135deg,#10b981,#047857);">AR</div>
+                  <div class="composer-box">
+                    <textarea id="cmt-input" rows="1"
+                      placeholder="Add a comment… use @ to mention a teammate"></textarea>
+                    <div class="composer-bar">
+                      <button class="composer-tool" id="cmt-mention" title="Mention (@)"><span
+                          class="material-symbols-outlined">alternate_email</span></button>
+                      <button class="composer-tool" id="cmt-attach-btn" title="Attach image"><span
+                          class="material-symbols-outlined">image</span></button>
+                      <span class="composer-hint">Markdown &amp; @mentions supported</span>
+                      <button class="btn btn-primary btn-sm" id="cmt-send" disabled><span
+                          class="material-symbols-outlined">send</span>Comment</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ============ Sidebar column ============ -->
+            <div style="display:flex; flex-direction: column; gap: 18px;">
+
+              <!-- Status -->
+              <div class="card section-card">
+                <div class="section-h" style="margin-bottom: 4px;">
+                  <div class="ic"><span class="material-symbols-outlined">flag</span></div>
+                  <div class="t">Status</div>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 6px;">Click to transition.</p>
+                <div class="status-switcher" id="status-switcher">
+                  <button class="status-opt" data-status="Open"><span
+                      class="material-symbols-outlined">priority_high</span>Open</button>
+                  <button class="status-opt" data-status="On Progress"><span
+                      class="material-symbols-outlined">autorenew</span>On Progress</button>
+                  <button class="status-opt" data-status="Acceptance"><span
+                      class="material-symbols-outlined">gavel</span>Acceptance</button>
+                  <button class="status-opt" data-status="Closed"><span
+                      class="material-symbols-outlined">check_circle</span>Closed</button>
+                </div>
+              </div>
+
+              <!-- Properties -->
+              <div class="card section-card">
+                <div class="section-h">
+                  <div class="ic"><span class="material-symbols-outlined">tune</span></div>
+                  <div class="t">Properties</div>
+                </div>
+                <div>
+                  <div class="meta-row"><span class="k">Finding ID</span><span class="v mono" id="m-id">—</span></div>
+                  <div class="meta-row"><span class="k">VAPT Project</span><span class="v" id="m-project">—</span></div>
+                  <div class="meta-row"><span class="k">Application</span><span class="v" id="m-app">—</span></div>
+                  <div class="meta-row"><span class="k">Finding Place</span><span class="v" id="m-place">—</span></div>
+                  <div class="meta-row"><span class="k">Category</span><span class="v" id="m-cat">—</span></div>
+                  <div class="meta-row"><span class="k">CVSS</span><span class="v mono" id="m-cvss">—</span></div>
+                  <div class="meta-row"><span class="k">PIC</span><span class="v" id="m-pic">—</span></div>
+                  <div class="meta-row"><span class="k">Discovered</span><span class="v mono" id="m-found">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Activity -->
+              <div class="card section-card">
+                <div class="section-h">
+                  <div class="ic"><span class="material-symbols-outlined">history</span></div>
+                  <div class="t">Activity</div>
+                </div>
+                <div class="tl">
+                  <div class="tl-item">
+                    <div class="tl-dot primary"><span class="material-symbols-outlined">add</span></div>
+                    <div class="tl-body">
+                      <div class="head"><strong>Sarah Park</strong> created this finding</div>
+                      <div class="sub" id="tl-date">—</div>
+                    </div>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot"><span class="material-symbols-outlined">attach_file</span></div>
+                    <div class="tl-body">
+                      <div class="head"><strong>Sarah Park</strong> attached <span class="mono"
+                          style="color: var(--text-muted)">proof-of-concept.har</span></div>
+                      <div class="sub">2 hours later</div>
+                    </div>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot"><span class="material-symbols-outlined">person</span></div>
+                    <div class="tl-body">
+                      <div class="head"><strong>Abu Rizal Mahdi</strong> assigned to PIC</div>
+                      <div class="sub">Yesterday · 14:22</div>
+                    </div>
+                  </div>
+                  <div class="tl-item">
+                    <div class="tl-dot accent"><span class="material-symbols-outlined">forum</span></div>
+                    <div class="tl-body">
+                      <div class="head"><strong>Ari Wibowo</strong> commented</div>
+                      <div class="sub">3 hours ago</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox">
+    <button class="lb-close" id="lb-close"><span class="material-symbols-outlined">close</span></button>
+    <img id="lb-img" alt="Attachment preview" />
+  </div>
+
+  <script src="shell.js"></script>
+  <script src="findings-data.js"></script>
+  <script>
+    const STATUS_PILL = { 'Open': 'pill-blocked', 'On Progress': 'pill-progress', 'Acceptance': 'pill-acceptance', 'Closed': 'pill-done' };
+    const PLACE_CLASS = { 'Web Application': 'web', 'Server': 'server', 'Mobile App': 'mobile' };
+    const PLACE_ICON = { 'Web Application': 'language', 'Server': 'dns', 'Mobile App': 'smartphone' };
+
+    function sevFromCvss(c) {
+      if (c >= 9.0) return 'Critical';
+      if (c >= 7.0) return 'High';
+      if (c >= 4.0) return 'Medium';
+      if (c > 0) return 'Low';
+      return 'Info';
+    }
+    function sevColor(s) {
+      return s === 'Critical' ? 'var(--sev-critical)'
+        : s === 'High' ? 'var(--sev-high)'
+          : s === 'Medium' ? 'var(--sev-medium)'
+            : s === 'Low' ? 'var(--sev-low)'
+              : 'var(--sev-info)';
+    }
+    function sevPill(s) {
+      return s === 'Critical' ? 'sev-critical'
+        : s === 'High' ? 'sev-high'
+          : s === 'Medium' ? 'sev-medium'
+            : s === 'Low' ? 'sev-low'
+              : 'sev-info';
+    }
+
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function fmtProse(s) {
+      if (!s) return '<p>—</p>';
+      const html = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+      return html.split(/\n+/).map(p => `<p>${p}</p>`).join('');
+    }
+
+    function copyUrl() {
+      const u = document.getElementById('f-url').textContent;
+      if (navigator.clipboard) navigator.clipboard.writeText(u);
+    }
+
+    function render() {
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id') || FINDINGS[0].id;
+      const f = FINDINGS.find(x => x.id === id) || FINDINGS[0];
+
+      const sev = sevFromCvss(f.cvss);
+      const cat = OWASP_TOP10.find(c => c.id === f.category);
+
+      document.getElementById('f-id').textContent = f.id;
+      document.getElementById('f-title').textContent = f.title;
+      document.getElementById('f-subtitle').textContent = `${f.project} · ${f.application}`;
+
+      const sevEl = document.getElementById('f-sev');
+      sevEl.className = 'sev ' + sevPill(sev);
+      sevEl.textContent = sev.toUpperCase();
+
+      const stEl = document.getElementById('f-status-pill');
+      stEl.className = 'pill ' + STATUS_PILL[f.status];
+      document.getElementById('f-status').textContent = f.status;
+
+      // CVSS box
+      document.getElementById('cvss-num').textContent = f.cvss.toFixed(1);
+      document.getElementById('cvss-num').style.color = sevColor(sev);
+      document.getElementById('cvss-sev').textContent = sev + ' severity';
+      document.getElementById('cvss-sev').style.color = sevColor(sev);
+      document.getElementById('cvss-bar').style.width = (f.cvss * 10) + '%';
+      document.getElementById('cvss-bar').style.background = sevColor(sev);
+
+      // URL
+      document.getElementById('f-url').textContent = f.url;
+      document.getElementById('url-icon').textContent = PLACE_ICON[f.place] || 'language';
+
+      // Place + cat chips
+      const place = document.getElementById('f-place');
+      place.className = 'place-chip ' + PLACE_CLASS[f.place];
+      place.innerHTML = `<span class="material-symbols-outlined">${PLACE_ICON[f.place]}</span>${f.place}`;
+      document.getElementById('f-cat').innerHTML = `<span class="material-symbols-outlined" style="font-size:14px">shield</span>${f.category} · ${cat ? cat.name : ''}`;
+
+      // Prose
+      document.getElementById('f-desc').innerHTML = fmtProse(f.description);
+      document.getElementById('f-impact').innerHTML = fmtProse(f.impact);
+      document.getElementById('f-rec').innerHTML = fmtProse(f.recommendation);
+
+      // Properties
+      document.getElementById('m-id').textContent = f.id;
+      document.getElementById('m-project').textContent = f.project;
+      document.getElementById('m-app').textContent = f.application;
+      document.getElementById('m-place').textContent = f.place;
+      document.getElementById('m-cat').textContent = f.category;
+      document.getElementById('m-cvss').textContent = f.cvss.toFixed(1) + ' · ' + sev;
+      document.getElementById('m-cvss').style.color = sevColor(sev);
+      document.getElementById('m-pic').textContent = f.pic;
+      document.getElementById('m-found').textContent = fmtDate(f.found);
+
+      // Activity dates
+      document.getElementById('tl-date').textContent = fmtDate(f.found);
+
+      // Edit link
+      document.getElementById('edit-link').href = `finding-create.html?id=${f.id}`;
+
+      // Status switcher
+      document.querySelectorAll('[data-status]').forEach(b => {
+        b.classList.toggle('on', b.dataset.status === f.status);
+        b.addEventListener('click', () => {
+          document.querySelectorAll('[data-status]').forEach(x => x.classList.toggle('on', x === b));
+          f.status = b.dataset.status;
+          const sp = document.getElementById('f-status-pill');
+          sp.className = 'pill ' + STATUS_PILL[f.status];
+          document.getElementById('f-status').textContent = f.status;
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', render);
+
+    /* ===== Comments / discussion ===== */
+    const TEAM = [
+      { name: 'Sarah Park', un: 'sarah.park', grad: 'linear-gradient(135deg,var(--primary),#7c1d1d)' },
+      { name: 'Ari Wibowo', un: 'ari.wibowo', grad: 'linear-gradient(135deg,#3b82f6,#1e40af)' },
+      { name: 'Abu Rizal Mahdi', un: 'abu.rizal', grad: 'linear-gradient(135deg,#a855f7,#6b21a8)' },
+      { name: 'Nur Hasbullah', un: 'nur.hasbullah', grad: 'linear-gradient(135deg,#f59e0b,#b45309)' },
+      { name: 'Budi Santoso', un: 'budi.santoso', grad: 'linear-gradient(135deg,#10b981,#047857)' },
+    ];
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function renderCommentText(raw) {
+      let html = escapeHtml(raw);
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      // Highlight @mentions of known teammates (longest names first)
+      [...TEAM].sort((a, b) => b.name.length - a.name.length).forEach(t => {
+        const re = new RegExp('@' + t.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        html = html.replace(re, `<a class="mention" data-mention>@${t.name}</a>`);
+      });
+      return html.split(/\n{2,}/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+    }
+
+    /* ---- Lightbox ---- */
+    const lightbox = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lb-img');
+    function openLightbox(src) { lbImg.src = src; lightbox.classList.add('open'); }
+    function closeLightbox() { lightbox.classList.remove('open'); }
+    document.addEventListener('click', (e) => {
+      const att = e.target.closest('[data-lightbox]');
+      if (att) { openLightbox(att.dataset.lightbox); }
+    });
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox || e.target.closest('#lb-close')) closeLightbox(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+
+    /* ---- Like toggle ---- */
+    document.getElementById('cmt-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('.like-btn');
+      if (!btn) return;
+      const on = btn.classList.toggle('liked');
+      const n = parseInt(btn.textContent.trim(), 10) || 0;
+      btn.querySelector('.material-symbols-outlined').style.fontVariationSettings = on ? "'FILL' 1" : "'FILL' 0";
+      btn.style.color = on ? 'var(--primary)' : '';
+      btn.childNodes[btn.childNodes.length - 1].textContent = on ? (n + 1) : (n - 1);
+    });
+
+    /* ---- Composer ---- */
+    const cmtInput = document.getElementById('cmt-input');
+    const cmtSend = document.getElementById('cmt-send');
+    const cmtList = document.getElementById('cmt-list');
+    const cmtCount = document.getElementById('cmt-count');
+    const composerBox = cmtInput.closest('.composer-box');
+
+    function autoGrow() { cmtInput.style.height = 'auto'; cmtInput.style.height = Math.min(cmtInput.scrollHeight, 160) + 'px'; }
+    cmtInput.addEventListener('input', () => { autoGrow(); cmtSend.disabled = !cmtInput.value.trim(); handleMentionTyping(); });
+
+    function countComments() {
+      return cmtList.querySelectorAll('.cmt').length;
+    }
+    function postComment() {
+      const text = cmtInput.value.trim();
+      if (!text) return;
+      const el = document.createElement('div');
+      el.className = 'cmt';
+      el.innerHTML = `
+    <div class="avatar" style="background: linear-gradient(135deg,#10b981,#047857);">AR</div>
+    <div class="cmt-body">
+      <div class="cmt-head">
+        <span class="name">Abu Rizal Mahdi</span>
+        <span class="role">Manager</span>
+        <span class="time">Just now</span>
+      </div>
+      <div class="cmt-text">${renderCommentText(text)}</div>
+      <div class="cmt-actions">
+        <button class="cmt-action"><span class="material-symbols-outlined">reply</span>Reply</button>
+        <button class="cmt-action like-btn"><span class="material-symbols-outlined">thumb_up</span>0</button>
+      </div>
+    </div>`;
+      cmtList.appendChild(el);
+      cmtInput.value = ''; autoGrow(); cmtSend.disabled = true;
+      const n = countComments();
+      cmtCount.textContent = n + (n === 1 ? ' comment' : ' comments');
+    }
+    cmtSend.addEventListener('click', postComment);
+    cmtInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); postComment(); }
+    });
+    document.getElementById('cmt-mention').addEventListener('click', () => {
+      cmtInput.focus();
+      cmtInput.value += (cmtInput.value && !/\s$/.test(cmtInput.value) ? ' ' : '') + '@';
+      cmtInput.dispatchEvent(new Event('input'));
+    });
+    document.getElementById('cmt-attach-btn').addEventListener('click', () => {
+      alert('Attach image — file picker would open here (demo).');
+    });
+
+    /* ---- @mention autocomplete ---- */
+    let mentionPop = null, mentionActive = 0, mentionMatches = [];
+    function closeMentionPop() { if (mentionPop) { mentionPop.remove(); mentionPop = null; } }
+    function handleMentionTyping() {
+      const val = cmtInput.value;
+      const upto = val.slice(0, cmtInput.selectionStart);
+      const m = upto.match(/@([a-zA-Z ]*)$/);
+      if (!m) { closeMentionPop(); return; }
+      const q = m[1].toLowerCase();
+      mentionMatches = TEAM.filter(t => t.name.toLowerCase().includes(q) || t.un.includes(q)).slice(0, 5);
+      if (!mentionMatches.length) { closeMentionPop(); return; }
+      if (!mentionPop) {
+        mentionPop = document.createElement('div');
+        mentionPop.className = 'mention-pop';
+        composerBox.style.position = 'relative';
+        composerBox.appendChild(mentionPop);
+      }
+      mentionActive = 0;
+      mentionPop.innerHTML = mentionMatches.map((t, i) => `
+    <div class="mention-opt ${i === 0 ? 'active' : ''}" data-i="${i}">
+      <span class="avatar sm" style="background:${t.grad}">${t.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</span>
+      <div><div class="nm">${t.name}</div><div class="un">@${t.un}</div></div>
+    </div>`).join('');
+      mentionPop.style.left = '10px';
+      mentionPop.style.bottom = '52px';
+      mentionPop.querySelectorAll('.mention-opt').forEach(opt => {
+        opt.addEventListener('mousedown', (e) => { e.preventDefault(); pickMention(+opt.dataset.i); });
+      });
+    }
+    function pickMention(i) {
+      const t = mentionMatches[i];
+      if (!t) return;
+      const val = cmtInput.value;
+      const pos = cmtInput.selectionStart;
+      const before = val.slice(0, pos).replace(/@([a-zA-Z ]*)$/, '@' + t.name);
+      cmtInput.value = before + (val.slice(pos) ? '' : ' ') + val.slice(pos);
+      cmtInput.focus();
+      cmtInput.selectionStart = cmtInput.selectionEnd = before.length + 1;
+      closeMentionPop();
+      cmtSend.disabled = !cmtInput.value.trim();
+    }
+    cmtInput.addEventListener('keydown', (e) => {
+      if (!mentionPop) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); mentionActive = (mentionActive + 1) % mentionMatches.length; }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); mentionActive = (mentionActive - 1 + mentionMatches.length) % mentionMatches.length; }
+      else if (e.key === 'Enter') { e.preventDefault(); pickMention(mentionActive); return; }
+      else if (e.key === 'Escape') { closeMentionPop(); return; }
+      else return;
+      mentionPop.querySelectorAll('.mention-opt').forEach((o, i) => o.classList.toggle('active', i === mentionActive));
+    });
+    cmtInput.addEventListener('blur', () => setTimeout(closeMentionPop, 150));
+  </script>
+</body>
+
+</html>

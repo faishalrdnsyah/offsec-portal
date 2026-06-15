@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sign in — Offensive &amp; New Dev Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<style>
+  :root {
+    --primary:        #dc2626;
+    --primary-600:    #b91c1c;
+    --primary-soft:   rgba(220, 38, 38, 0.18);
+    --accent:         #10b981;
+    --warn:           #f59e0b;
+    --info:           #3b82f6;
+    --radius-sm: 6px;
+    --radius:    10px;
+    --radius-lg: 14px;
+  }
+  html[data-theme="dark"] {
+    --bg:            #0b1220;
+    --surface:       #111c2e;
+    --surface-2:     #18243a;
+    --border:        #1f2d44;
+    --border-strong: #2c3e5e;
+    --text:          #e2e8f0;
+    --text-muted:    #94a3b8;
+    --text-faint:    #64748b;
+    --shadow-card:   0 24px 60px -20px rgba(0,0,0,0.75), 0 6px 18px -8px rgba(0,0,0,0.45);
+  }
+  html[data-theme="light"] {
+    --bg:            #f6f7f8;
+    --surface:       #ffffff;
+    --surface-2:     #f1f5f9;
+    --border:        #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text:          #0f172a;
+    --text-muted:    #64748b;
+    --text-faint:    #94a3b8;
+    --shadow-card:   0 24px 60px -20px rgba(15,23,42,0.18), 0 6px 18px -8px rgba(15,23,42,0.08);
+  }
+  html[data-theme="midnight"] {
+    --bg:            #14080d;
+    --surface:       #1f1218;
+    --surface-2:     #2a1a22;
+    --border:        #3a2530;
+    --border-strong: #4d3441;
+    --text:          #f5edee;
+    --text-muted:    #a89599;
+    --text-faint:    #75666a;
+    --shadow-card:   0 24px 60px -20px rgba(0,0,0,0.85), 0 6px 18px -8px rgba(0,0,0,0.55);
+  }
+
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: 'tnum'; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; user-select: none; }
+  .ms-fill { font-variation-settings: 'FILL' 1; }
+
+  /* Background pattern + vignette to match landing */
+  .grid-bg {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 64px 64px;
+    background-position: -1px -1px;
+    opacity: 0.32;
+    pointer-events: none;
+  }
+  .vignette {
+    position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(220,38,38,0.14), transparent 55%),
+      radial-gradient(circle at 50% 110%, rgba(59,130,246,0.06), transparent 50%);
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 32px;
+    position: relative; z-index: 2;
+  }
+  .brand-mark { color: var(--primary); display: inline-flex; align-items: center; justify-content: center; }
+  .brand-mark svg { width: 100%; height: 100%; display: block; }
+
+  .tb-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 36px; min-width: 36px; padding: 0 10px;
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .tb-btn:hover { background: var(--border); }
+
+  .theme-row { display: inline-flex; background: var(--surface-2); border-radius: 8px; padding: 3px; gap: 2px; border: 1px solid var(--border); }
+  .theme-row button {
+    background: transparent; border: none;
+    color: var(--text-muted); padding: 5px 10px; border-radius: 6px;
+    cursor: pointer; font-family: inherit;
+  }
+  .theme-row button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+  .theme-row button .material-symbols-outlined { font-size: 15px; vertical-align: middle; }
+
+  /* Login card */
+  .login-shell { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 36px 36px 30px;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+  }
+  /* Red glow on the top edge */
+  .login-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    opacity: 0.7;
+  }
+  .login-card::after {
+    content: ""; position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(220,38,38,0.22), transparent 65%);
+    pointer-events: none;
+  }
+  .login-content { position: relative; z-index: 1; }
+
+  /* Brand at top of card */
+  .login-brand {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+  }
+  .login-brand .mark {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--primary), #7c1d1d);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    box-shadow: 0 12px 24px -8px rgba(220,38,38,0.45);
+  }
+  .login-brand .mark .brand-mark { width: 30px; height: 30px; color: #fff; }
+  .login-brand .name { font-size: 13px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
+  .login-brand .sub { font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; margin-top: -8px; }
+
+  .login-h {
+    text-align: center;
+    font-size: 22px; font-weight: 900; letter-spacing: -0.02em;
+    color: var(--text);
+    margin: 0 0 6px;
+  }
+  .login-sub {
+    text-align: center;
+    font-size: 13px; color: var(--text-muted);
+    margin: 0 0 26px;
+  }
+
+  /* Field */
+  .field-group { margin-bottom: 14px; }
+  .field-label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .field-label a {
+    text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 12px;
+    color: var(--primary); text-decoration: none;
+  }
+  .field-label a:hover { text-decoration: underline; }
+
+  .field-wrap {
+    position: relative;
+    display: flex; align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field-wrap:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+  }
+  .field-wrap .ico-lead {
+    padding: 0 10px 0 14px;
+    color: var(--text-muted);
+    display: flex; align-items: center;
+  }
+  .field-wrap .ico-lead .material-symbols-outlined { font-size: 18px; }
+  .field-input {
+    flex: 1;
+    background: transparent; border: none; outline: none;
+    padding: 11px 0 11px 0;
+    font-family: inherit; font-size: 14px;
+    color: var(--text);
+  }
+  .field-input::placeholder { color: var(--text-faint); }
+  .field-trail {
+    padding: 0 12px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted);
+    display: flex; align-items: center;
+  }
+  .field-trail:hover { color: var(--text); }
+
+  /* Checkbox */
+  .check-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-muted);
+    margin: 6px 0 22px;
+    cursor: pointer; user-select: none;
+  }
+  .check-box {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface-2);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .check-box.on { background: var(--primary); border-color: var(--primary); }
+  .check-box.on::after {
+    content: "";
+    width: 8px; height: 5px;
+    border-left: 2px solid white; border-bottom: 2px solid white;
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
+
+  /* Sign in button */
+  .btn-primary {
+    width: 100%;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700; font-size: 14px;
+    padding: 12px 16px;
+    border: none; border-radius: 10px;
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    box-shadow: 0 8px 20px -8px rgba(220,38,38,0.6);
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-primary:hover { background: var(--primary-600); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-primary:disabled {
+    background: var(--surface-2); color: var(--text-faint);
+    cursor: not-allowed; box-shadow: none;
+  }
+  .btn-primary .material-symbols-outlined { font-size: 17px; }
+
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0 16px;
+    font-size: 11px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .divider::before, .divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .btn-soft {
+    width: 100%;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    font-weight: 600; font-size: 13.5px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 0.15s;
+  }
+  .btn-soft:hover { background: var(--border); }
+  .btn-soft .material-symbols-outlined { font-size: 17px; }
+
+  .signup-line {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 12.5px; color: var(--text-muted);
+  }
+  .signup-line a { color: var(--primary); font-weight: 600; text-decoration: none; }
+  .signup-line a:hover { text-decoration: underline; }
+
+  /* Status chip below card */
+  .status-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 5px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    margin-top: 20px;
+  }
+  .status-chip .pulse {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 8px rgba(16,185,129,0.7);
+    animation: pulse 1.6s steps(2) infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+
+  /* Error shake */
+  .shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+
+  .alert {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(220,38,38,0.12);
+    color: #fca5a5;
+    border: 1px solid rgba(220,38,38,0.3);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    margin-bottom: 14px;
+  }
+  .alert .material-symbols-outlined { font-size: 17px; }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="vignette"></div>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="flex items-center gap-3">
+    <div class="brand-mark" style="width: 36px; height: 36px;">
+      <svg viewBox="0 0 936 727" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+        <path d="M664.813 0.898438C654.241 9.55542 638.435 23.6153 625.375 37.6523C618.845 44.6719 613.012 51.6739 608.866 57.9834C606.793 61.1379 605.148 64.1089 604.047 66.8145C602.945 69.5243 602.4 71.9383 602.496 73.9883L602.511 74.3203L602.211 74.4629L511.902 117.372L500.505 151.088C539.404 120.848 647.365 60.8524 779.95 54.5137C799.691 52.0977 831.146 47.4755 861.362 41.459C891.61 35.436 920.536 28.0308 935.259 20.0723L935.872 20.8418C919.849 39.1188 890.471 67.6435 854.39 93.8535C818.32 120.055 775.513 143.971 732.622 152.995C710.171 159.316 673.348 174.32 635.895 198.78C598.928 222.924 561.378 256.263 536.419 299.53C549.355 291.723 582.007 278.018 622.967 278.012C636.706 276.512 658.651 273.415 679.857 268.997C690.466 266.787 700.884 264.246 709.994 261.412C719.11 258.576 726.885 255.454 732.23 252.089L733.159 251.504L732.991 252.588C726.644 293.504 685.001 377.92 569.283 389.434L584.359 418.128L664.705 455.058L665.855 455.586L664.655 455.986L568.833 487.926L518.929 574.262L518.768 574.542L518.446 574.509C489.82 571.596 443.244 571.372 396.589 580.166C349.921 588.963 303.264 606.767 274.373 639.841L274.328 639.893L274.27 639.931C263.314 647.068 249.664 659.818 244.216 674.857C241.498 682.363 240.824 690.428 243.534 698.662C246.244 706.9 252.357 715.357 263.297 723.612L264.274 724.349L263.061 724.508C237.512 727.847 198.704 727.625 165.308 716.084C131.894 704.536 103.822 681.618 99.9984 639.557L99.9389 638.897L100.589 639.021C106.733 640.183 117.084 641.58 128.14 641.987C139.026 642.388 150.546 641.825 159.408 639.166C157.675 631.385 155.637 619.51 155.035 608.577C154.727 603.004 154.792 597.656 155.466 593.213C156.137 588.795 157.427 585.163 159.662 583.141L160.091 582.752L160.412 583.234C165.721 591.197 175.095 601.932 185.949 608.28C191.372 611.452 197.138 613.514 202.933 613.612C208.709 613.71 214.55 611.857 220.155 607.145L314.132 507.169L314.155 507.146L314.179 507.125L353.179 475.125L353.348 474.987L353.564 475.017L441.263 486.976L510.231 389.929L466.809 403.438L427.408 460.297L427.232 460.55L426.926 460.507C416.354 459.008 398.817 456.985 380.577 455.786C362.347 454.588 343.452 454.215 330.107 456.001L160.357 507.924C155.931 517.622 151.474 541.211 168.366 559.674L169.118 560.496L168.003 560.512C161.861 560.596 151.897 559.386 141.903 555.49C131.99 551.626 122.008 545.101 115.723 534.53C102.764 535.382 71.0038 549.328 46.4467 599.232L46.1645 599.805L45.6762 599.395C28.4326 584.913 7.75949 557.011 1.7289 520.33C-4.30548 483.625 4.33145 438.19 45.6137 388.691L46.4564 387.681L46.4975 388.996C46.7035 395.632 48.6175 402.204 52.9613 406.7C57.2837 411.174 64.0922 413.675 74.2797 412.03C84.4863 410.382 98.0499 404.575 115.779 392.457C133.452 380.377 155.235 362.045 181.92 335.379C179.183 327.592 175.941 315.565 174.986 304.392C174.502 298.734 174.602 293.266 175.667 288.669C176.728 284.09 178.761 280.315 182.19 278.114L284.164 187.638L285.318 186.615L284.985 188.12L275.506 230.998C287.325 205.525 308.48 167.548 335.997 131.21C365.107 92.7693 401.377 56.1068 441.29 38.0557L442.404 37.5527L441.962 38.6924C437.967 49.0138 432.274 65.321 428.18 80.6904C426.133 88.3758 424.488 95.815 423.655 102.148C422.879 108.039 422.817 112.897 423.73 116.105C444.199 96.8314 480.402 68.1947 523.302 44.1875C566.6 19.9574 616.771 0.412741 664.493 0.0117188L665.911 0L664.813 0.898438ZM356.886 292.024L356.753 292.055L356.655 292.147L284.155 360.147L283.233 361.012H346.496C351.467 361.012 356.749 358.343 361.996 354.12C367.253 349.888 372.54 344.042 377.53 337.567C387.466 324.673 396.274 309.221 401.377 298.867L445.25 272.942L444.886 272.024L356.886 292.024Z"/>
+      </svg>
+    </div>
+    <div>
+      <div style="font-weight: 800; font-size: 14px; letter-spacing: -0.01em; color: var(--text)">Offensive &amp; New Dev Portal</div>
+      <div class="mono" style="font-size: 10.5px; color: var(--text-muted); letter-spacing: 0.08em">PORTAL.HUB · v2.4</div>
+    </div>
+  </div>
+</header>
+
+<!-- Login card -->
+<div class="login-shell" style="min-height: calc(100vh - 76px)">
+  <div class="login-card" id="login-card">
+    <div class="login-content">
+
+      <div class="login-brand">
+        <div class="mark">
+          <div class="brand-mark">
+            <svg viewBox="0 0 936 727" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+              <path d="M664.813 0.898438C654.241 9.55542 638.435 23.6153 625.375 37.6523C618.845 44.6719 613.012 51.6739 608.866 57.9834C606.793 61.1379 605.148 64.1089 604.047 66.8145C602.945 69.5243 602.4 71.9383 602.496 73.9883L602.511 74.3203L602.211 74.4629L511.902 117.372L500.505 151.088C539.404 120.848 647.365 60.8524 779.95 54.5137C799.691 52.0977 831.146 47.4755 861.362 41.459C891.61 35.436 920.536 28.0308 935.259 20.0723L935.872 20.8418C919.849 39.1188 890.471 67.6435 854.39 93.8535C818.32 120.055 775.513 143.971 732.622 152.995C710.171 159.316 673.348 174.32 635.895 198.78C598.928 222.924 561.378 256.263 536.419 299.53C549.355 291.723 582.007 278.018 622.967 278.012C636.706 276.512 658.651 273.415 679.857 268.997C690.466 266.787 700.884 264.246 709.994 261.412C719.11 258.576 726.885 255.454 732.23 252.089L733.159 251.504L732.991 252.588C726.644 293.504 685.001 377.92 569.283 389.434L584.359 418.128L664.705 455.058L665.855 455.586L664.655 455.986L568.833 487.926L518.929 574.262L518.768 574.542L518.446 574.509C489.82 571.596 443.244 571.372 396.589 580.166C349.921 588.963 303.264 606.767 274.373 639.841L274.328 639.893L274.27 639.931C263.314 647.068 249.664 659.818 244.216 674.857C241.498 682.363 240.824 690.428 243.534 698.662C246.244 706.9 252.357 715.357 263.297 723.612L264.274 724.349L263.061 724.508C237.512 727.847 198.704 727.625 165.308 716.084C131.894 704.536 103.822 681.618 99.9984 639.557L99.9389 638.897L100.589 639.021C106.733 640.183 117.084 641.58 128.14 641.987C139.026 642.388 150.546 641.825 159.408 639.166C157.675 631.385 155.637 619.51 155.035 608.577C154.727 603.004 154.792 597.656 155.466 593.213C156.137 588.795 157.427 585.163 159.662 583.141L160.091 582.752L160.412 583.234C165.721 591.197 175.095 601.932 185.949 608.28C191.372 611.452 197.138 613.514 202.933 613.612C208.709 613.71 214.55 611.857 220.155 607.145L314.132 507.169L314.155 507.146L314.179 507.125L353.179 475.125L353.348 474.987L353.564 475.017L441.263 486.976L510.231 389.929L466.809 403.438L427.408 460.297L427.232 460.55L426.926 460.507C416.354 459.008 398.817 456.985 380.577 455.786C362.347 454.588 343.452 454.215 330.107 456.001L160.357 507.924C155.931 517.622 151.474 541.211 168.366 559.674L169.118 560.496L168.003 560.512C161.861 560.596 151.897 559.386 141.903 555.49C131.99 551.626 122.008 545.101 115.723 534.53C102.764 535.382 71.0038 549.328 46.4467 599.232L46.1645 599.805L45.6762 599.395C28.4326 584.913 7.75949 557.011 1.7289 520.33C-4.30548 483.625 4.33145 438.19 45.6137 388.691L46.4564 387.681L46.4975 388.996C46.7035 395.632 48.6175 402.204 52.9613 406.7C57.2837 411.174 64.0922 413.675 74.2797 412.03C84.4863 410.382 98.0499 404.575 115.779 392.457C133.452 380.377 155.235 362.045 181.92 335.379C179.183 327.592 175.941 315.565 174.986 304.392C174.502 298.734 174.602 293.266 175.667 288.669C176.728 284.09 178.761 280.315 182.19 278.114L284.164 187.638L285.318 186.615L284.985 188.12L275.506 230.998C287.325 205.525 308.48 167.548 335.997 131.21C365.107 92.7693 401.377 56.1068 441.29 38.0557L442.404 37.5527L441.962 38.6924C437.967 49.0138 432.274 65.321 428.18 80.6904C426.133 88.3758 424.488 95.815 423.655 102.148C422.879 108.039 422.817 112.897 423.73 116.105C444.199 96.8314 480.402 68.1947 523.302 44.1875C566.6 19.9574 616.771 0.412741 664.493 0.0117188L665.911 0L664.813 0.898438ZM356.886 292.024L356.753 292.055L356.655 292.147L284.155 360.147L283.233 361.012H346.496C351.467 361.012 356.749 358.343 361.996 354.12C367.253 349.888 372.54 344.042 377.53 337.567C387.466 324.673 396.274 309.221 401.377 298.867L445.25 272.942L444.886 272.024L356.886 292.024Z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="name">Offensive &amp; New Dev Portal</div>
+      </div>
+
+      <h1 class="login-h">Welcome back</h1>
+      <p class="login-sub">Sign in to continue to your workspace.</p>
+
+      <div id="alert-box"></div>
+
+      <form id="login-form" autocomplete="on">
+
+        <div class="field-group">
+          <label class="field-label" for="email">
+            Email or username
+          </label>
+          <div class="field-wrap">
+            <span class="ico-lead"><span class="material-symbols-outlined">person</span></span>
+            <input id="email" class="field-input" type="text" placeholder="alex@offsec.local" autocomplete="username" required />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="password">
+            Password
+            <a href="#" id="forgot">Forgot password?</a>
+          </label>
+          <div class="field-wrap">
+            <span class="ico-lead"><span class="material-symbols-outlined">lock</span></span>
+            <input id="password" class="field-input" type="password" placeholder="••••••••••" autocomplete="current-password" required />
+            <button type="button" class="field-trail" id="toggle-pw" aria-label="Show password">
+              <span class="material-symbols-outlined" id="pw-eye">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <label class="check-row" id="remember-row">
+          <span class="check-box on" id="remember-box"></span>
+          <span>Keep me signed in on this device</span>
+        </label>
+
+        <button type="submit" class="btn-primary" id="signin-btn">
+          <span id="signin-label">Sign in</span>
+          <span class="material-symbols-outlined" id="signin-icon">arrow_forward</span>
+        </button>
+
+      </form>
+
+      <div class="signup-line">
+        Need an account? <a href="#">Contact your administrator</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============== Password show / hide ==============
+  const pwInput = document.getElementById('password');
+  const pwEye = document.getElementById('pw-eye');
+  document.getElementById('toggle-pw').addEventListener('click', () => {
+    if (pwInput.type === 'password') { pwInput.type = 'text'; pwEye.textContent = 'visibility_off'; }
+    else { pwInput.type = 'password'; pwEye.textContent = 'visibility'; }
+  });
+
+  // ============== Remember toggle ==============
+  const rememberRow = document.getElementById('remember-row');
+  const rememberBox = document.getElementById('remember-box');
+  let remember = true;
+  rememberRow.addEventListener('click', () => {
+    remember = !remember;
+    rememberBox.classList.toggle('on', remember);
+  });
+
+  // ============== Alert helper ==============
+  function showAlert(msg) {
+    const box = document.getElementById('alert-box');
+    box.innerHTML = `<div class="alert"><span class="material-symbols-outlined ms-fill">error</span><span>${msg}</span></div>`;
+    const card = document.getElementById('login-card');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+  }
+  function clearAlert() { document.getElementById('alert-box').innerHTML = ''; }
+
+  // ============== Submit ==============
+  const form = document.getElementById('login-form');
+  const btn = document.getElementById('signin-btn');
+  const label = document.getElementById('signin-label');
+  const icon = document.getElementById('signin-icon');
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const pw = pwInput.value;
+    clearAlert();
+    if (!email || !pw) { showAlert('Please enter both email and password.'); return; }
+    if (pw.length < 4) { showAlert('That password looks too short.'); return; }
+
+    btn.disabled = true;
+    label.textContent = 'Signing in…';
+    icon.textContent = 'progress_activity';
+    icon.style.animation = 'spin 0.8s linear infinite';
+
+    setTimeout(() => {
+      // Demo: route to portal selection
+      window.location.href = 'portal-select.html';
+    }, 900);
+  });
+
+  // Forgot link
+  document.getElementById('forgot').addEventListener('click', (e) => {
+    e.preventDefault();
+    showAlert('Password reset link sent (demo).');
+  });
+</script>
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</body>
+</html>

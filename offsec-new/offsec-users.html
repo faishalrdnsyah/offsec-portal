@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>User Management — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 12px; flex-shrink: 0;
+    font-family: 'Inter', sans-serif;
+  }
+  .user-cell { display: flex; align-items: center; gap: 11px; min-width: 0; }
+  .user-cell .nm { font-weight: 600; font-size: 13px; color: var(--text); line-height: 1.25; }
+  .user-cell .em { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+
+  .role-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border-radius: 6px;
+    font-size: 11.5px; font-weight: 600;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .role-chip .material-symbols-outlined { font-size: 14px; }
+  .role-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .pill-active   { color: #10b981; background: rgba(16,185,129,0.18); }
+  .pill-inactive { color: var(--text-muted); background: var(--surface-2); border: 1px solid var(--border); }
+  .pill-locked   { color: #ef4444; background: rgba(220,38,38,0.18); }
+
+  .mfa-yes { color: var(--accent); font-weight: 600; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px; }
+  .mfa-no  { color: var(--text-faint); font-weight: 500; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px; }
+  .mfa-yes .material-symbols-outlined, .mfa-no .material-symbols-outlined { font-size: 14px; }
+
+  .stat-card { padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+  .stat-card .ic { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .stat-card .ic .material-symbols-outlined { font-size: 19px; }
+  .stat-card .label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+  .stat-card .value { font-size: 19px; font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; margin-top: 1px; }
+
+  .row-actions { display: inline-flex; gap: 2px; }
+  .row-action-btn {
+    width: 28px; height: 28px;
+    background: transparent; border: 0; border-radius: 6px;
+    color: var(--text-muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: inherit;
+  }
+  .row-action-btn:hover { background: var(--surface-2); color: var(--text); }
+  .row-action-btn .material-symbols-outlined { font-size: 17px; }
+  .row-action-btn.danger:hover { background: rgba(220,38,38,0.10); color: var(--primary); }
+</style>
+</head>
+<body data-page="user-management">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1500px; margin: 0 auto; display:flex; flex-direction:column; gap: 18px;">
+
+        <!-- Header row -->
+        <div style="display:flex; justify-content:space-between; align-items:center; gap: 16px; flex-wrap: wrap;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; flex: 1; min-width: 0;">
+            <div class="card stat-card">
+              <div class="ic" style="background: rgba(220,38,38,0.16); color: var(--primary);"><span class="material-symbols-outlined ms-fill">groups</span></div>
+              <div><div class="label">Total users</div><div class="value mono" id="kpi-total">0</div></div>
+            </div>
+            <div class="card stat-card">
+              <div class="ic" style="background: rgba(16,185,129,0.18); color: var(--accent);"><span class="material-symbols-outlined ms-fill">check_circle</span></div>
+              <div><div class="label">Active</div><div class="value mono" id="kpi-active" style="color:var(--accent)">0</div></div>
+            </div>
+            <div class="card stat-card">
+              <div class="ic" style="background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border);"><span class="material-symbols-outlined">pause_circle</span></div>
+              <div><div class="label">Inactive</div><div class="value mono" id="kpi-inactive">0</div></div>
+            </div>
+            <div class="card stat-card">
+              <div class="ic" style="background: rgba(220,38,38,0.18); color: var(--primary);"><span class="material-symbols-outlined ms-fill">lock</span></div>
+              <div><div class="label">Locked</div><div class="value mono" id="kpi-locked" style="color:var(--primary)">0</div></div>
+            </div>
+            <div class="card stat-card">
+              <div class="ic" style="background: rgba(59,130,246,0.18); color: var(--info);"><span class="material-symbols-outlined ms-fill">verified_user</span></div>
+              <div><div class="label">MFA enrolled</div><div class="value mono" id="kpi-mfa" style="color:var(--info)">0</div></div>
+            </div>
+          </div>
+          <div style="display:flex; gap: 8px;">
+            <button class="btn btn-ghost"><span class="material-symbols-outlined">download</span>Export</button>
+            <a class="btn btn-primary" href="offsec-user-create.html"><span class="material-symbols-outlined">add</span>New user</a>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="card" style="padding: 12px 14px; display:grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 10px; align-items: center;">
+          <div style="position: relative;">
+            <span class="material-symbols-outlined" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;">search</span>
+            <input id="search" class="field" placeholder="Search name, username, email…" style="padding-left: 36px;" oninput="render()"/>
+          </div>
+          <select id="f-role" class="field" onchange="render()">
+            <option value="">All roles</option>
+          </select>
+          <select id="f-status" class="field" onchange="render()">
+            <option value="">All statuses</option>
+            <option>Active</option>
+            <option>Inactive</option>
+            <option>Locked</option>
+          </select>
+          <select id="f-mfa" class="field" onchange="render()">
+            <option value="">MFA — all</option>
+            <option value="on">MFA enrolled</option>
+            <option value="off">MFA not enrolled</option>
+          </select>
+        </div>
+
+        <!-- Users table -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 18px; border-bottom: 1px solid var(--border);">
+            <div style="font-size: 13px; color: var(--text-muted);">
+              Showing <strong style="color: var(--text)" id="count-shown">0</strong> of <strong style="color: var(--text)" id="count-total">0</strong> users
+            </div>
+            <div style="display:flex; gap: 8px;">
+              <button class="btn btn-ghost btn-sm"><span class="material-symbols-outlined">tune</span>Columns</button>
+              <button class="btn btn-ghost btn-sm"><span class="material-symbols-outlined">key</span>Bulk reset</button>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>MFA</th>
+                  <th>Last seen</th>
+                  <th>Status</th>
+                  <th style="text-align: right; padding-right: 18px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <div id="empty" class="empty-state" style="display:none;">
+            <span class="material-symbols-outlined">person_off</span>
+            <div class="empty-state-title">No users match those filters.</div>
+            <div class="empty-state-sub">Try clearing a filter or inviting a new user.</div>
+            <a class="btn btn-primary btn-sm" href="offsec-user-create.html" style="margin-top:6px"><span class="material-symbols-outlined">add</span>New user</a>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script src="users-data.js"></script>
+<script>
+const STATUS_PILL = { 'Active':'pill-active', 'Inactive':'pill-inactive', 'Locked':'pill-locked' };
+
+function hydrateFilters() {
+  const roleSel = document.getElementById('f-role');
+  ROLES.forEach(r => roleSel.insertAdjacentHTML('beforeend', `<option value="${r.id}">${r.name}</option>`));
+}
+
+function fmtLastSeen(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffH = diffMs / 36e5;
+  if (diffH < 1)   return Math.max(1, Math.round(diffMs/6e4)) + ' min ago';
+  if (diffH < 24)  return Math.round(diffH) + ' h ago';
+  const diffD = diffH / 24;
+  if (diffD < 7)   return Math.round(diffD) + ' d ago';
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' });
+}
+
+function applyFilters() {
+  const q  = document.getElementById('search').value.toLowerCase();
+  const rl = document.getElementById('f-role').value;
+  const st = document.getElementById('f-status').value;
+  const mf = document.getElementById('f-mfa').value;
+  return USERS.filter(u =>
+    (!q  || (u.name + u.username + u.email + u.id).toLowerCase().includes(q)) &&
+    (!rl || u.role === rl) &&
+    (!st || u.status === st) &&
+    (!mf || (mf === 'on' ? u.mfa : !u.mfa))
+  );
+}
+
+function renderKpis() {
+  document.getElementById('kpi-total').textContent    = USERS.length;
+  document.getElementById('kpi-active').textContent   = USERS.filter(u => u.status === 'Active').length;
+  document.getElementById('kpi-inactive').textContent = USERS.filter(u => u.status === 'Inactive').length;
+  document.getElementById('kpi-locked').textContent   = USERS.filter(u => u.status === 'Locked').length;
+  document.getElementById('kpi-mfa').textContent      = USERS.filter(u => u.mfa).length;
+}
+
+function render() {
+  const rows = applyFilters();
+  const body = document.getElementById('rows');
+  const empty = document.getElementById('empty');
+  document.getElementById('count-shown').textContent = rows.length;
+  document.getElementById('count-total').textContent = USERS.length;
+  if (!rows.length) { body.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  body.innerHTML = rows.map(u => {
+    const r = roleById(u.role);
+    return `
+      <tr class="clickable" onclick="if(!event.target.closest('.row-actions')) location.href='offsec-user-detail.html?id=${u.id}'">
+        <td>
+          <div class="user-cell">
+            <span class="avatar" style="background:${userAvatarColor(u.name)}">${userInitials(u.name)}</span>
+            <div style="min-width:0">
+              <div class="nm">${u.name}</div>
+              <div class="em">${u.email}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="mono" style="font-size:12px; color:var(--text-muted)">${u.username}</span></td>
+        <td>
+          <span class="role-chip" style="border-color:${r.color}40; background:${r.color}1a; color:${r.color}">
+            <span class="role-dot" style="background:${r.color}"></span>
+            ${r.name}
+          </span>
+        </td>
+        <td>${u.mfa
+          ? '<span class="mfa-yes"><span class="material-symbols-outlined ms-fill">verified_user</span>Enrolled</span>'
+          : '<span class="mfa-no"><span class="material-symbols-outlined">no_encryption</span>Not set</span>'}</td>
+        <td><span class="mono" style="font-size:11.5px; color: var(--text-muted)">${fmtLastSeen(u.lastSeen)}</span></td>
+        <td><span class="pill ${STATUS_PILL[u.status]}"><span class="dot"></span>${u.status}</span></td>
+        <td style="text-align: right; padding-right: 14px;">
+          <div class="row-actions" onclick="event.stopPropagation()">
+            <a class="row-action-btn" title="Edit" href="offsec-user-create.html?id=${u.id}"><span class="material-symbols-outlined">edit</span></a>
+            <button class="row-action-btn" title="Reset password" onclick="alert('Password reset link sent (demo)')"><span class="material-symbols-outlined">key</span></button>
+            <button class="row-action-btn danger" title="Disable" onclick="alert('Disable user (demo)')"><span class="material-symbols-outlined">block</span></button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  hydrateFilters();
+  renderKpis();
+  render();
+});
+</script>
+</body>
+</html>

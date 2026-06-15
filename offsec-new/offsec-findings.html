@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Findings — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  /* Page-specific */
+  .cvss-cell {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    font-size: 12.5px;
+  }
+  .cvss-bar { width: 44px; height: 5px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+  .cvss-bar > div { height: 100%; }
+
+  .place-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 8px; border-radius: 6px;
+    font-size: 11px; font-weight: 600;
+    background: var(--surface-2); color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .place-chip .material-symbols-outlined { font-size: 13px; }
+  .place-chip.web    { color: #3b82f6; background: rgba(59,130,246,0.12);  border-color: rgba(59,130,246,0.25); }
+  .place-chip.server { color: #a855f7; background: rgba(168,85,247,0.12);  border-color: rgba(168,85,247,0.25); }
+  .place-chip.mobile { color: #10b981; background: rgba(16,185,129,0.14); border-color: rgba(16,185,129,0.28); }
+
+  .owasp-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 1px 7px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.03em;
+    background: rgba(220,38,38,0.10); color: var(--primary);
+    border: 1px solid rgba(220,38,38,0.20);
+  }
+
+  .url-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; color: var(--text-muted);
+    max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    display: inline-block; vertical-align: middle;
+  }
+
+  .pill-acceptance { color: #a855f7; background: rgba(168,85,247,0.18); }
+
+  .stat-card { padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+  .stat-card .ic { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .stat-card .ic .material-symbols-outlined { font-size: 19px; }
+  .stat-card .label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+  .stat-card .value { font-size: 19px; font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; margin-top: 1px; }
+
+  .pager-btn { min-width: 30px; height: 30px; padding: 0 9px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; display: inline-flex; align-items: center; justify-content: center; color: var(--text); cursor: pointer; font-family: inherit; }
+  .pager-btn:hover { background: var(--surface-2); }
+  .pager-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .pager-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body data-page="findings">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1500px; margin: 0 auto; display:flex; flex-direction:column; gap: 18px;">
+
+        <!-- Header row -->
+        <div style="display:flex; justify-content:space-between; align-items:center; gap: 16px; flex-wrap: wrap;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; flex: 1; min-width: 0;">
+            <div class="card stat-card">
+              <div class="ic" style="background: rgba(220,38,38,0.16); color: var(--primary);"><span class="material-symbols-outlined ms-fill">bug_report</span></div>
+              <div><div class="label">Total findings</div><div class="value mono" id="kpi-total">0</div></div>
+            </div>
+            <div class="card stat-card">
+              <div class="ic" style="background: rgba(239,68,68,0.18); color: #ef4444;"><span class="material-symbols-outlined ms-fill">priority_high</span></div>
+              <div><div class="label">Open</div><div class="value mono" id="kpi-open" style="color:#ef4444">0</div></div>
+            </div>
+            <div class="card stat-card">
+              <div class="ic" style="background: rgba(59,130,246,0.18); color: var(--info);"><span class="material-symbols-outlined ms-fill">autorenew</span></div>
+              <div><div class="label">On Progress</div><div class="value mono" id="kpi-progress" style="color:var(--info)">0</div></div>
+            </div>
+            <div class="card stat-card">
+              <div class="ic" style="background: rgba(168,85,247,0.18); color: #a855f7;"><span class="material-symbols-outlined ms-fill">gavel</span></div>
+              <div><div class="label">Acceptance</div><div class="value mono" id="kpi-acceptance" style="color:#a855f7">0</div></div>
+            </div>
+            <div class="card stat-card">
+              <div class="ic" style="background: rgba(16,185,129,0.18); color: var(--accent);"><span class="material-symbols-outlined ms-fill">verified</span></div>
+              <div><div class="label">Closed</div><div class="value mono" id="kpi-closed" style="color:var(--accent)">0</div></div>
+            </div>
+          </div>
+          <div style="display:flex; gap: 8px;">
+            <button class="btn btn-ghost"><span class="material-symbols-outlined">download</span>Export</button>
+            <a class="btn btn-primary" href="offsec-finding-create.html"><span class="material-symbols-outlined">add</span>New finding</a>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="card" style="padding: 12px 14px; display:grid; grid-template-columns: 2fr repeat(5, 1fr); gap: 10px; align-items: center;">
+          <div style="position: relative;">
+            <span class="material-symbols-outlined" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;">search</span>
+            <input id="search" class="field" placeholder="Search title, URL, project…" style="padding-left: 36px;" oninput="render()"/>
+          </div>
+          <select id="f-project" class="field" onchange="render()">
+            <option value="">All projects</option>
+          </select>
+          <select id="f-place" class="field" onchange="render()">
+            <option value="">All places</option>
+            <option>Web Application</option>
+            <option>Server</option>
+            <option>Mobile App</option>
+          </select>
+          <select id="f-cat" class="field" onchange="render()">
+            <option value="">All categories</option>
+          </select>
+          <select id="f-sev" class="field" onchange="render()">
+            <option value="">All severities</option>
+            <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+          </select>
+          <select id="f-status" class="field" onchange="render()">
+            <option value="">All statuses</option>
+            <option>Open</option><option>On Progress</option><option>Acceptance</option><option>Closed</option>
+          </select>
+        </div>
+
+        <!-- Findings table -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 18px; border-bottom: 1px solid var(--border);">
+            <div style="font-size: 13px; color: var(--text-muted);">
+              Showing <strong style="color: var(--text)" id="count-shown">0</strong> of <strong style="color: var(--text)" id="count-total">0</strong> findings
+            </div>
+            <div style="display:flex; gap: 8px;">
+              <button class="btn btn-ghost btn-sm"><span class="material-symbols-outlined">tune</span>Columns</button>
+              <button class="btn btn-ghost btn-sm"><span class="material-symbols-outlined">filter_list</span>Saved views</button>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Project</th>
+                  <th>Place</th>
+                  <th>Category</th>
+                  <th>CVSS</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <div id="empty" class="empty-state" style="display:none;">
+            <span class="material-symbols-outlined">bug_report</span>
+            <div class="empty-state-title">No findings match those filters.</div>
+            <div class="empty-state-sub">Try clearing a filter or logging a new finding.</div>
+            <a class="btn btn-primary btn-sm" href="offsec-finding-create.html" style="margin-top:6px"><span class="material-symbols-outlined">add</span>New finding</a>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 18px; border-top: 1px solid var(--border); background: var(--surface-2); font-size:12px; color:var(--text-muted);">
+            <div>Page <strong style="color:var(--text)">1</strong> of <strong style="color:var(--text)">3</strong></div>
+            <div style="display:flex; gap: 4px;">
+              <button class="pager-btn" disabled><span class="material-symbols-outlined" style="font-size:16px">chevron_left</span></button>
+              <button class="pager-btn active">1</button>
+              <button class="pager-btn">2</button>
+              <button class="pager-btn">3</button>
+              <button class="pager-btn"><span class="material-symbols-outlined" style="font-size:16px">chevron_right</span></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script src="findings-data.js"></script>
+<script>
+const STATUS_PILL = {
+  'Open':        'pill-blocked',
+  'On Progress': 'pill-progress',
+  'Acceptance':  'pill-acceptance',
+  'Closed':      'pill-done',
+};
+const STATUS_ICON = {
+  'Open':        'priority_high',
+  'On Progress': 'autorenew',
+  'Acceptance':  'gavel',
+  'Closed':      'check_circle',
+};
+const PLACE_CLASS = { 'Web Application':'web', 'Server':'server', 'Mobile App':'mobile' };
+const PLACE_ICON  = { 'Web Application':'language', 'Server':'dns', 'Mobile App':'smartphone' };
+
+function sevFromCvss(c) {
+  if (c >= 9.0) return 'Critical';
+  if (c >= 7.0) return 'High';
+  if (c >= 4.0) return 'Medium';
+  if (c >  0)   return 'Low';
+  return 'Info';
+}
+function sevColor(s) {
+  return s === 'Critical' ? 'var(--sev-critical)'
+       : s === 'High'     ? 'var(--sev-high)'
+       : s === 'Medium'   ? 'var(--sev-medium)'
+       : s === 'Low'      ? 'var(--sev-low)'
+       : 'var(--sev-info)';
+}
+function sevPill(s) {
+  return s === 'Critical' ? 'sev-critical'
+       : s === 'High'     ? 'sev-high'
+       : s === 'Medium'   ? 'sev-medium'
+       : s === 'Low'      ? 'sev-low'
+       : 'sev-info';
+}
+
+// Populate filter dropdowns
+function hydrateFilters() {
+  const projSel = document.getElementById('f-project');
+  const projects = [...new Set(FINDINGS.map(f => f.project))].sort();
+  projects.forEach(p => projSel.insertAdjacentHTML('beforeend', `<option>${p}</option>`));
+  const catSel = document.getElementById('f-cat');
+  OWASP_TOP10.forEach(c => catSel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.id} — ${c.name}</option>`));
+}
+
+function applyFilters() {
+  const q  = document.getElementById('search').value.toLowerCase();
+  const pr = document.getElementById('f-project').value;
+  const pl = document.getElementById('f-place').value;
+  const ca = document.getElementById('f-cat').value;
+  const sv = document.getElementById('f-sev').value;
+  const st = document.getElementById('f-status').value;
+  return FINDINGS.filter(r =>
+    (!q || (r.title + r.project + r.url + r.id).toLowerCase().includes(q)) &&
+    (!pr || r.project === pr) &&
+    (!pl || r.place === pl) &&
+    (!ca || r.category === ca) &&
+    (!sv || sevFromCvss(r.cvss) === sv) &&
+    (!st || r.status === st)
+  );
+}
+
+function renderKpis() {
+  document.getElementById('kpi-total').textContent      = FINDINGS.length;
+  document.getElementById('kpi-open').textContent       = FINDINGS.filter(f => f.status === 'Open').length;
+  document.getElementById('kpi-progress').textContent   = FINDINGS.filter(f => f.status === 'On Progress').length;
+  document.getElementById('kpi-acceptance').textContent = FINDINGS.filter(f => f.status === 'Acceptance').length;
+  document.getElementById('kpi-closed').textContent     = FINDINGS.filter(f => f.status === 'Closed').length;
+}
+
+function render() {
+  const rows = applyFilters();
+  const body = document.getElementById('rows');
+  const empty = document.getElementById('empty');
+  document.getElementById('count-shown').textContent = rows.length;
+  document.getElementById('count-total').textContent = FINDINGS.length;
+  if (!rows.length) { body.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+
+  body.innerHTML = rows.map(r => {
+    const sev = sevFromCvss(r.cvss);
+    const cat = OWASP_TOP10.find(c => c.id === r.category);
+    return `
+      <tr class="clickable" onclick="location.href='offsec-finding-detail.html?id=${r.id}'">
+        <td><span class="mono" style="color: var(--primary); font-weight:600; font-size: 12px;">${r.id}</span></td>
+        <td style="max-width: 360px;">
+          <div style="font-weight: 600; font-size: 13px; color: var(--text); line-height:1.3;">${r.title}</div>
+          <div class="url-cell" title="${r.url}">${r.url}</div>
+        </td>
+        <td><div style="font-size: 12.5px;">${r.project}</div><div style="font-size: 11px; color: var(--text-muted);">${r.application}</div></td>
+        <td><span class="place-chip ${PLACE_CLASS[r.place]}"><span class="material-symbols-outlined">${PLACE_ICON[r.place]}</span>${r.place}</span></td>
+        <td><span class="owasp-chip" title="${cat ? cat.name : r.category}">${r.category}</span></td>
+        <td>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="cvss-cell" style="color:${sevColor(sev)}; min-width: 30px;">${r.cvss.toFixed(1)}</div>
+            <span class="sev ${sevPill(sev)}">${sev.toUpperCase()}</span>
+          </div>
+        </td>
+        <td><span class="pill ${STATUS_PILL[r.status]}"><span class="dot"></span>${r.status}</span></td>
+        <td><span class="material-symbols-outlined" style="color: var(--text-faint); font-size:18px">chevron_right</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  hydrateFilters();
+  renderKpis();
+  render();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Home — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  .stat { display:flex; flex-direction:column; gap: 4px; }
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); line-height: 1; font-family: 'JetBrains Mono', monospace; }
+  .stat-delta { display:inline-flex; align-items:center; gap: 1px; font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .stat-delta.up { color: var(--accent); }
+  .stat-delta.down { color: var(--sev-high); }
+
+  /* Gantt */
+  .gantt { display:grid; grid-template-columns: 150px 1fr; gap: 0; }
+  .gantt-head { display:grid; }
+  .gantt-head-cell { font-size: 10.5px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; padding: 0 0 8px; border-bottom: 1px solid var(--border); }
+  .gantt-rows { display:flex; flex-direction:column; }
+  .gantt-row { height: 38px; display:flex; align-items:center; font-size: 12.5px; color: var(--text); font-weight: 500; }
+  .gantt-track { height: 38px; position: relative; display:flex; align-items:center; }
+  .gantt-bar { position:absolute; height: 24px; border-radius: 6px; display:flex; align-items:center; padding: 0 9px; font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+  .gantt-vline { position:absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
+  .gantt-today { position:absolute; top: -4px; bottom: 0; width: 2px; background: var(--primary); z-index: 2; }
+  .gantt-today::after { content: "TODAY"; position:absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 800; letter-spacing: 0.05em; color: var(--primary); font-family: 'JetBrains Mono', monospace; }
+
+  .legend-item { display:flex; align-items:center; gap:5px; }
+  .legend-item span.sw { width:10px; height:10px; border-radius:3px; }
+
+  .hover-row { transition: background 0.1s, border-color 0.12s; }
+  .find-card:hover { transform: translateY(-1px); }
+</style>
+</head>
+<body data-page="home">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg); position:relative;">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 26px 28px 44px;">
+      <div style="max-width: 1500px; margin: 0 auto;">
+
+        <!-- Page header -->
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom: 26px;">
+          <div>
+            <div class="mono" style="font-size:11px; text-transform:uppercase; letter-spacing:0.15em; color: var(--text-faint); margin-bottom: 4px;">Workspace / Home</div>
+            <h1 id="greeting" style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin: 0;">Good morning, Abu Rizal.</h1>
+            <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 5px;">2 open critical findings need triage · 3 risk acceptances pending sign-off · 4 tasks due this week.</p>
+          </div>
+          <div style="display:flex; gap: 8px;">
+            <a class="btn btn-ghost" href="offsec-finding-create.html"><span class="material-symbols-outlined">bug_report</span>Log finding</a>
+            <a class="btn btn-primary" href="offsec-project-create.html"><span class="material-symbols-outlined">add</span>New project</a>
+          </div>
+        </div>
+
+        <!-- KPI strip -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(184px, 1fr)); gap: 14px; margin-bottom: 24px;">
+          <div class="card" style="padding: 18px;">
+            <div class="stat">
+              <span class="stat-label">Active projects</span>
+              <div style="display:flex; align-items:baseline; gap:8px"><span class="stat-value">12</span><span class="stat-delta up"><span class="material-symbols-outlined" style="font-size:14px">arrow_upward</span>+2</span></div>
+              <span style="font-size:11px; color: var(--text-faint)">4 planned · 8 completed</span>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px;">
+            <div class="stat">
+              <span class="stat-label">Open findings</span>
+              <div style="display:flex; align-items:baseline; gap:8px"><span class="stat-value" id="kpi-open" style="color: var(--sev-critical)">—</span><span class="stat-delta down"><span class="material-symbols-outlined" style="font-size:14px">arrow_upward</span>+6</span></div>
+              <span style="font-size:11px; color: var(--text-faint)" id="kpi-open-sub">— critical · — high</span>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px;">
+            <div class="stat">
+              <span class="stat-label">Remediation rate</span>
+              <div style="display:flex; align-items:baseline; gap:8px"><span class="stat-value" style="color: var(--accent)">82.5<span style="font-size: 15px; color: var(--text-muted)">%</span></span><span class="stat-delta up"><span class="material-symbols-outlined" style="font-size:14px">arrow_upward</span>+5.7</span></div>
+              <span style="font-size:11px; color: var(--text-faint)">vs. last quarter</span>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px;">
+            <div class="stat">
+              <span class="stat-label">MTTR</span>
+              <div style="display:flex; align-items:baseline; gap:8px"><span class="stat-value">4.2<span style="font-size: 15px; color: var(--text-muted)">d</span></span><span class="stat-delta up"><span class="material-symbols-outlined" style="font-size:14px">arrow_downward</span>−2.2d</span></div>
+              <span style="font-size:11px; color: var(--text-faint)">Target ≤ 5d</span>
+            </div>
+          </div>
+          <div class="card" style="padding: 18px;">
+            <div class="stat">
+              <span class="stat-label">RA pending</span>
+              <div style="display:flex; align-items:baseline; gap:8px"><span class="stat-value" style="color: var(--warn)">3</span></div>
+              <span style="font-size:11px; color: var(--text-faint)">Oldest: 9 days</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main grid -->
+        <div style="display:grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 22px; align-items: start;">
+
+          <!-- LEFT -->
+          <div style="display:flex; flex-direction:column; gap: 22px; min-width: 0;">
+
+            <!-- Gantt -->
+            <div class="card" style="padding: 20px 22px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                <div>
+                  <div class="card-title"><span class="material-symbols-outlined ico-bullet ms-fill">calendar_month</span>Engagement timeline</div>
+                  <div class="card-sub" style="margin-left: 34px;">Next 6 months · 4 active engagements</div>
+                </div>
+                <div style="display:flex; align-items:center; gap: 14px; font-size: 11px; color: var(--text-muted); flex-wrap: wrap;">
+                  <div class="legend-item"><span class="sw" style="background:#3b82f6"></span>VA</div>
+                  <div class="legend-item"><span class="sw" style="background:#a855f7"></span>VAPT</div>
+                  <div class="legend-item"><span class="sw" style="background:#10b981"></span>VA Infra</div>
+                  <div class="legend-item"><span class="sw" style="background:#ec4899"></span>VAPT Mobile</div>
+                </div>
+              </div>
+              <div class="gantt">
+                <div></div>
+                <div class="gantt-head" style="grid-template-columns: repeat(6, 1fr);">
+                  <div class="gantt-head-cell">Nov '25</div>
+                  <div class="gantt-head-cell">Dec</div>
+                  <div class="gantt-head-cell">Jan '26</div>
+                  <div class="gantt-head-cell">Feb</div>
+                  <div class="gantt-head-cell">Mar</div>
+                  <div class="gantt-head-cell">Apr</div>
+                </div>
+                <div class="gantt-rows">
+                  <div class="gantt-row">BSI - Infra</div>
+                  <div class="gantt-row">MMKSI - Microsite</div>
+                  <div class="gantt-row">KTB - HRIS</div>
+                  <div class="gantt-row">KTB - D-Net</div>
+                </div>
+                <div style="position:relative;">
+                  <div class="gantt-vline" style="left: 16.66%"></div>
+                  <div class="gantt-vline" style="left: 33.33%"></div>
+                  <div class="gantt-vline" style="left: 50%"></div>
+                  <div class="gantt-vline" style="left: 66.66%"></div>
+                  <div class="gantt-vline" style="left: 83.33%"></div>
+                  <div class="gantt-today" style="left: 56%"></div>
+                  <a href="offsec-project-detail.html?id=PRJ-001" class="gantt-track" style="text-decoration:none"><div class="gantt-bar" style="left:2%; width:62%; background:#10b981">BSI Core Infra VA · 65%</div></a>
+                  <a href="offsec-project-detail.html?id=PRJ-002" class="gantt-track" style="text-decoration:none"><div class="gantt-bar" style="left:10%; width:34%; background:#a855f7">MMKSI Microsite · 90%</div></a>
+                  <a href="offsec-project-detail.html?id=PRJ-003" class="gantt-track" style="text-decoration:none"><div class="gantt-bar" style="left:18%; width:54%; background:#ec4899">KTB HRIS Mobile · 40%</div></a>
+                  <a href="offsec-project-detail.html?id=PRJ-005" class="gantt-track" style="text-decoration:none"><div class="gantt-bar" style="left:40%; width:52%; background:#3b82f6">KTB D-Net · 50%</div></a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tasks -->
+            <div class="card" style="padding: 0;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding: 18px 22px; border-bottom: 1px solid var(--border);">
+                <div>
+                  <div class="card-title"><span class="material-symbols-outlined ico-bullet ms-fill">checklist</span>My tasks</div>
+                  <div class="card-sub" id="task-meta" style="margin-left: 34px;">—</div>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center">
+                  <div style="display:flex; gap:2px; background: var(--surface-2); border:1px solid var(--border); border-radius: 8px; padding: 3px;">
+                    <button class="btn btn-sm tab-filter on" data-filter="all">All</button>
+                    <button class="btn btn-sm tab-filter" data-filter="mine">Mine</button>
+                    <button class="btn btn-sm tab-filter" data-filter="overdue">Overdue</button>
+                  </div>
+                  <button class="btn btn-primary btn-sm" onclick="openTask()"><span class="material-symbols-outlined">add</span>Task</button>
+                </div>
+              </div>
+              <div style="overflow-x: auto;">
+                <table class="tbl">
+                  <thead><tr>
+                    <th style="width: 28px"></th>
+                    <th>Task</th>
+                    <th>Project</th>
+                    <th>Assignee</th>
+                    <th>Due</th>
+                    <th>Status</th>
+                    <th style="width: 32px"></th>
+                  </tr></thead>
+                  <tbody id="tasks"></tbody>
+                </table>
+              </div>
+              <div id="task-empty" class="empty-state" style="display:none;">
+                <span class="material-symbols-outlined">task_alt</span>
+                <div class="empty-state-title">All clear.</div>
+                <div class="empty-state-sub">No tasks match the current filter. Add a task or switch to "All".</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT -->
+          <div style="display:flex; flex-direction:column; gap: 22px; min-width: 0;">
+
+            <!-- Overdue findings -->
+            <div class="card" style="padding: 20px 22px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                <div class="card-title"><span class="material-symbols-outlined ico-bullet ms-fill">priority_high</span>Priority findings</div>
+                <a href="offsec-findings.html" style="font-size:12px; color: var(--primary); font-weight: 600; text-decoration:none;">View all →</a>
+              </div>
+              <div id="overdue-list" style="display:flex; flex-direction:column; gap: 8px;"></div>
+            </div>
+
+            <!-- Activity -->
+            <div class="card" style="padding: 20px 22px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                <div class="card-title"><span class="material-symbols-outlined ico-bullet ms-fill">history</span>Recent activity</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap: 15px;">
+                <div style="display:flex; gap: 10px;">
+                  <div style="width:30px; height: 30px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); display:flex; align-items:center; justify-content:center; flex-shrink: 0;"><span class="material-symbols-outlined ms-fill" style="font-size: 16px">policy</span></div>
+                  <div><div style="font-size:13px; color: var(--text); line-height:1.5"><b>RA-014</b> · KTB HRIS hard-coded key was <b style="color:var(--accent)">approved</b> by the CISO.</div><div class="mono" style="font-size:11px; color:var(--text-faint); margin-top: 2px;">2H AGO</div></div>
+                </div>
+                <div style="display:flex; gap: 10px;">
+                  <div style="width:30px; height: 30px; border-radius: 8px; background: rgba(220,38,38,0.14); color: var(--sev-high); display:flex; align-items:center; justify-content:center; flex-shrink: 0;"><span class="material-symbols-outlined ms-fill" style="font-size: 16px">bug_report</span></div>
+                  <div><div style="font-size:13px; color: var(--text); line-height:1.5"><b>Sarah Park</b> logged a <b style="color:var(--sev-critical)">critical</b> SQLi finding on BSI - Infra.</div><div class="mono" style="font-size:11px; color:var(--text-faint); margin-top: 2px;">5H AGO</div></div>
+                </div>
+                <div style="display:flex; gap: 10px;">
+                  <div style="width:30px; height: 30px; border-radius: 8px; background: rgba(16,185,129,0.15); color: var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink: 0;"><span class="material-symbols-outlined ms-fill" style="font-size: 16px">forum</span></div>
+                  <div><div style="font-size:13px; color: var(--text); line-height:1.5"><b>Ari Wibowo</b> commented on the SQL Injection finding.</div><div class="mono" style="font-size:11px; color:var(--text-faint); margin-top: 2px;">1D AGO</div></div>
+                </div>
+                <div style="display:flex; gap: 10px;">
+                  <div style="width:30px; height: 30px; border-radius: 8px; background: rgba(59,130,246,0.15); color: var(--info); display:flex; align-items:center; justify-content:center; flex-shrink: 0;"><span class="material-symbols-outlined ms-fill" style="font-size: 16px">assignment</span></div>
+                  <div><div style="font-size:13px; color: var(--text); line-height:1.5"><b>John Lee</b> submitted a Form &amp; Requirement for MMKSI - VTS.</div><div class="mono" style="font-size:11px; color:var(--text-faint); margin-top: 2px;">2D AGO</div></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Task modal -->
+<div id="task-modal" style="display:none; position:fixed; inset:0; z-index:80; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding: 20px;" onclick="if(event.target===this)closeTask()">
+  <div class="card" style="width: 100%; max-width: 520px; padding: 0;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding: 16px 20px; border-bottom: 1px solid var(--border)">
+      <div>
+        <div class="card-title">New task</div>
+        <div class="card-sub">Quick capture · auto-saved as draft</div>
+      </div>
+      <button class="tb-btn" onclick="closeTask()"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div style="padding: 20px; display:flex; flex-direction:column; gap: 14px;">
+      <div><label class="field-label">Task <span style="color:var(--primary)">*</span></label><input id="t-desc" class="field" placeholder="e.g. Re-test SQLi on BSI - Infra"/></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap: 12px;">
+        <div><label class="field-label">Project</label><select id="t-proj" class="field"></select></div>
+        <div><label class="field-label">Assignee</label><select id="t-pic" class="field"></select></div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap: 12px;">
+        <div><label class="field-label">Due date</label><input id="t-due" class="field mono" type="date"/></div>
+        <div><label class="field-label">Status</label><select id="t-st" class="field"><option>To Do</option><option>In Progress</option><option>In Review</option><option>Done</option></select></div>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border)">
+      <button class="btn btn-ghost" onclick="closeTask()">Cancel</button>
+      <button class="btn btn-primary" onclick="addTask()"><span class="material-symbols-outlined">add</span>Add task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); z-index:120; opacity:0; pointer-events:none; transition:all 0.22s; background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow-popover); border-radius:10px; padding:11px 16px; display:flex; align-items:center; gap:9px; font-size:13px; color:var(--text);"></div>
+
+<script src="shell.js"></script>
+<script src="findings-data.js"></script>
+<script src="home.js"></script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>New Project — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  .form-section { padding: 22px 24px; }
+  .form-section + .form-section { border-top: 1px solid var(--border); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  @media (max-width: 720px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .req::after { content: " *"; color: var(--primary); }
+
+  .file-drop {
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 10px;
+    padding: 18px;
+    background: var(--surface-2);
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .file-drop:hover { border-color: var(--primary); background: rgba(220,38,38,0.06); }
+  .file-drop.has-file { border-color: var(--accent); border-style: solid; background: rgba(16,185,129,0.06); }
+  .file-drop .icon {
+    width: 40px; height: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .file-drop.has-file .icon { background: rgba(16,185,129,0.18); color: var(--accent); border-color: rgba(16,185,129,0.3); }
+  .file-drop .icon .material-symbols-outlined { font-size: 20px; }
+  .file-drop .text { flex: 1; min-width: 0; }
+  .file-drop .t { font-size: 13px; font-weight: 600; color: var(--text); }
+  .file-drop .s { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .file-drop .clear { color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; }
+  .file-drop .clear:hover { background: var(--border); color: var(--text); }
+  .file-drop input[type=file] { display: none; }
+
+  .pic-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .pic-option:hover { border-color: var(--text-muted); }
+  .pic-option.on { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 1px var(--primary); }
+  .pic-option .avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px; flex-shrink: 0; }
+
+  /* Selectable dropdown for PIC */
+  .pic-select-wrap { position: relative; }
+  .pic-pop {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-popover);
+    overflow: hidden;
+    display: none;
+  }
+  .pic-pop.open { display: block; }
+  .pic-pop-list { max-height: 240px; overflow-y: auto; padding: 4px; }
+  .pic-pop-item { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .pic-pop-item:hover { background: var(--surface-2); }
+  .pic-trigger {
+    width: 100%;
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    color: var(--text);
+    min-height: 40px;
+    font-family: inherit;
+  }
+  .pic-trigger:hover { border-color: var(--text-muted); }
+  .pic-trigger.open { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+  .pic-trigger .chev { margin-left: auto; font-size: 18px; color: var(--text-muted); transition: transform 0.15s; }
+  .pic-trigger.open .chev { transform: rotate(180deg); }
+  .pic-trigger .placeholder { color: var(--text-muted); }
+
+  /* Stepper */
+  .stepper { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .step { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; color: var(--text-muted); }
+  .step .num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); color: var(--text-muted); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .step.active { color: var(--text); background: var(--surface-2); border: 1px solid var(--border); }
+  .step.active .num { background: var(--primary); color: #fff; }
+  .step-sep { flex: 1; height: 1px; background: var(--border); max-width: 60px; }
+</style>
+</head>
+<body data-page="project-create">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1100px; margin: 0 auto;">
+
+        <a href="offsec-projects.html" style="display:inline-flex; align-items:center; gap: 6px; font-size: 12.5px; color: var(--text-muted); text-decoration: none; margin-bottom: 14px;">
+          <span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>
+          All projects
+        </a>
+
+        <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; color: var(--text);">New project</h1>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 22px;">Create a new VA/VAPT engagement. Required fields marked with <span style="color: var(--primary)">*</span>.</p>
+
+        <!-- Stepper -->
+        <div class="stepper" style="margin-bottom: 22px;">
+          <div class="step active"><span class="num">1</span> Basics</div>
+          <div class="step-sep"></div>
+          <div class="step"><span class="num">2</span> Schedule</div>
+          <div class="step-sep"></div>
+          <div class="step"><span class="num">3</span> Files</div>
+          <div class="step-sep"></div>
+          <div class="step"><span class="num">4</span> People</div>
+        </div>
+
+        <form id="project-form" class="card" style="padding: 0;">
+
+          <!-- ============ 1. Basics ============ -->
+          <div class="form-section">
+            <div class="card-title" style="margin-bottom: 4px;">
+              <span class="material-symbols-outlined ico-bullet ms-fill">info</span>
+              Basics
+            </div>
+            <p class="card-sub" style="margin-left: 34px; margin-bottom: 18px;">Identify the engagement.</p>
+
+            <div class="form-grid">
+              <div class="full">
+                <label class="field-label req" for="f-name">Name</label>
+                <input id="f-name" class="field" type="text" placeholder="e.g. BSI Core Infra VA — Q2" required />
+              </div>
+
+              <div class="full">
+                <label class="field-label" for="f-desc">Description</label>
+                <textarea id="f-desc" class="field" placeholder="Brief project description, scope, and objectives…"></textarea>
+              </div>
+
+              <div>
+                <label class="field-label req" for="f-fy">Fiscal Year</label>
+                <select id="f-fy" class="field" required>
+                  <option value="">Select fiscal year…</option>
+                  <option>2023</option>
+                  <option>2024</option>
+                  <option selected>2025</option>
+                  <option>2026</option>
+                  <option>2027</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="field-label req" for="f-activity">Activity Type</label>
+                <select id="f-activity" class="field" required>
+                  <option value="">Select activity type…</option>
+                  <option>VA</option>
+                  <option>VAPT</option>
+                  <option>VA Infra</option>
+                  <option>VAPT Mobile Apps</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="field-label req" for="f-status">Status</label>
+                <select id="f-status" class="field" required>
+                  <option value="Open" selected>Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Canceled">Canceled</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="field-label req" for="f-application">Application</label>
+                <select id="f-application" class="field" required>
+                  <option value="">Select application…</option>
+                  <option>BSI - Infra</option>
+                  <option>MMKSI - Microsite</option>
+                  <option>KTB - HRIS</option>
+                  <option>MMKSI - VTS</option>
+                  <option>KTB - D-Net Interface</option>
+                  <option>BSI - Timesheet</option>
+                  <option>KTB - FDMA CMS Sales</option>
+                  <option>KTB - Karoseri Portal</option>
+                  <option>MMKSI - D-Net Interface</option>
+                  <option>KTB - Supplier Portal</option>
+                  <option>KTB - Sparepart Catalog</option>
+                  <option>KTB - Microsite Career</option>
+                  <option>KTB - Visit</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ 2. Schedule ============ -->
+          <div class="form-section">
+            <div class="card-title" style="margin-bottom: 4px;">
+              <span class="material-symbols-outlined ico-bullet ms-fill">event</span>
+              Schedule
+            </div>
+            <p class="card-sub" style="margin-left: 34px; margin-bottom: 18px;">Set the planned and completion dates.</p>
+
+            <div class="form-grid">
+              <div>
+                <label class="field-label req" for="f-start">Plan Start</label>
+                <input id="f-start" class="field mono" type="date" required />
+              </div>
+              <div>
+                <label class="field-label req" for="f-end">Plan End</label>
+                <input id="f-end" class="field mono" type="date" required />
+              </div>
+              <div>
+                <label class="field-label" for="f-complete">Completion Date</label>
+                <input id="f-complete" class="field mono" type="date" />
+                <div style="font-size: 11px; color: var(--text-faint); margin-top: 4px;">Leave empty if still in progress.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ 3. Files ============ -->
+          <div class="form-section">
+            <div class="card-title" style="margin-bottom: 4px;">
+              <span class="material-symbols-outlined ico-bullet ms-fill">attach_file</span>
+              Files
+            </div>
+            <p class="card-sub" style="margin-left: 34px; margin-bottom: 18px;">Upload report and planning materials.</p>
+
+            <div class="form-grid">
+              <div>
+                <label class="field-label">Report File</label>
+                <label class="file-drop" id="drop-report">
+                  <div class="icon"><span class="material-symbols-outlined ms-fill">upload_file</span></div>
+                  <div class="text">
+                    <div class="t">Click to upload report</div>
+                    <div class="s">PDF, DOCX up to 25 MB</div>
+                  </div>
+                  <input type="file" id="f-report" accept=".pdf,.doc,.docx" />
+                </label>
+              </div>
+
+              <div>
+                <label class="field-label">Planning Material</label>
+                <label class="file-drop" id="drop-planning">
+                  <div class="icon"><span class="material-symbols-outlined ms-fill">description</span></div>
+                  <div class="text">
+                    <div class="t">Click to upload planning</div>
+                    <div class="s">DOCX, XLSX, PDF up to 25 MB</div>
+                  </div>
+                  <input type="file" id="f-planning" accept=".pdf,.doc,.docx,.xls,.xlsx" />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ 4. People ============ -->
+          <div class="form-section">
+            <div class="card-title" style="margin-bottom: 4px;">
+              <span class="material-symbols-outlined ico-bullet ms-fill">groups</span>
+              People
+            </div>
+            <p class="card-sub" style="margin-left: 34px; margin-bottom: 18px;">Assign the PIC and the application owner.</p>
+
+            <div class="form-grid">
+              <div class="pic-select-wrap">
+                <label class="field-label req">PIC</label>
+                <button type="button" class="pic-trigger" data-target="pic">
+                  <span id="pic-display"><span class="placeholder">Select PIC…</span></span>
+                  <span class="material-symbols-outlined chev">expand_more</span>
+                </button>
+                <div class="pic-pop" id="pic-pop">
+                  <input class="ms-search" placeholder="Search users…" data-search="pic"/>
+                  <div class="pic-pop-list" id="pic-list"></div>
+                </div>
+                <input type="hidden" id="f-pic" required />
+              </div>
+
+              <div class="pic-select-wrap">
+                <label class="field-label req">Application PIC</label>
+                <button type="button" class="pic-trigger" data-target="apppic">
+                  <span id="apppic-display"><span class="placeholder">Select application PIC…</span></span>
+                  <span class="material-symbols-outlined chev">expand_more</span>
+                </button>
+                <div class="pic-pop" id="apppic-pop">
+                  <input class="ms-search" placeholder="Search users…" data-search="apppic"/>
+                  <div class="pic-pop-list" id="apppic-list"></div>
+                </div>
+                <input type="hidden" id="f-apppic" required />
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ Actions ============ -->
+          <div style="padding: 18px 24px; border-top: 1px solid var(--border); background: var(--surface-2); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-radius: 0 0 14px 14px;">
+            <a class="btn btn-ghost" href="offsec-projects.html">
+              <span class="material-symbols-outlined">close</span>
+              Cancel
+            </a>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-soft" type="button" id="save-draft">
+                <span class="material-symbols-outlined">save</span>
+                Save as draft
+              </button>
+              <button class="btn btn-primary" type="submit">
+                <span class="material-symbols-outlined">check</span>
+                Create project
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script>
+const USERS = [
+  { id:'AR', name:'Abu Rizal Mahdi',  role:'Senior Pentester',    color:'var(--primary)' },
+  { id:'SP', name:'Sarah Park',        role:'Pentester · Network', color:'var(--info)' },
+  { id:'JL', name:'John Lee',          role:'Pentester · Web',     color:'var(--accent)' },
+  { id:'NH', name:'Nur Hasbullah M.',  role:'Pentester · Mobile',  color:'#8b5cf6' },
+  { id:'BD', name:'Budi',              role:'Pentester · Infra',   color:'#ec4899' },
+  { id:'MD', name:'Mark Diaz',         role:'BSI · Infra Lead',    color:'#f97316' },
+  { id:'AI', name:'Ari Wibowo',        role:'KTB · IT Manager',    color:'#06b6d4' },
+  { id:'ML', name:'Maya Lim',          role:'MMKSI · Product Owner',color:'#10b981' },
+];
+
+function userInitials(name) {
+  return name.split(' ').map(s => s[0]).slice(0,2).join('').toUpperCase();
+}
+
+function renderPicList(targetId, query = '') {
+  const listEl = document.getElementById(targetId + '-list');
+  const q = query.toLowerCase();
+  const matches = USERS.filter(u => u.name.toLowerCase().includes(q) || u.role.toLowerCase().includes(q));
+  if (!matches.length) {
+    listEl.innerHTML = `<div style="text-align: center; font-size: 12px; color: var(--text-faint); padding: 14px;">No users match "${query}"</div>`;
+    return;
+  }
+  listEl.innerHTML = matches.map(u => `
+    <div class="pic-pop-item" data-user="${u.id}">
+      <span class="avatar" style="width:26px; height:26px; border-radius:50%; background:${u.color}; color:#fff; font-weight:700; font-size:10.5px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${userInitials(u.name)}</span>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size: 13px; font-weight: 500; color: var(--text);">${u.name}</div>
+        <div style="font-size: 11px; color: var(--text-muted);">${u.role}</div>
+      </div>
+    </div>
+  `).join('');
+  listEl.querySelectorAll('[data-user]').forEach(el => {
+    el.addEventListener('click', () => selectPic(targetId, el.dataset.user));
+  });
+}
+
+function selectPic(targetId, userId) {
+  const u = USERS.find(x => x.id === userId);
+  if (!u) return;
+  document.getElementById(targetId + '-display').innerHTML = `
+    <span style="display:inline-flex; align-items:center; gap:8px;">
+      <span style="width:24px; height:24px; border-radius:50%; background:${u.color}; color:#fff; font-weight:700; font-size:10px; display:flex; align-items:center; justify-content:center;">${userInitials(u.name)}</span>
+      <span>${u.name}</span>
+      <span style="color: var(--text-muted); font-size: 11.5px">· ${u.role}</span>
+    </span>
+  `;
+  document.getElementById('f-' + (targetId === 'pic' ? 'pic' : 'apppic')).value = u.id;
+  closePicPop();
+}
+
+let openPic = null;
+function openPicPop(targetId) {
+  closePicPop();
+  const trigger = document.querySelector(`[data-target="${targetId}"]`);
+  const pop = document.getElementById(targetId + '-pop');
+  trigger.classList.add('open');
+  pop.classList.add('open');
+  openPic = { targetId, trigger, pop };
+  renderPicList(targetId, '');
+  const search = pop.querySelector('[data-search]');
+  if (search) {
+    search.value = '';
+    setTimeout(() => search.focus(), 0);
+  }
+}
+function closePicPop() {
+  if (openPic) {
+    openPic.trigger.classList.remove('open');
+    openPic.pop.classList.remove('open');
+    openPic = null;
+  }
+}
+
+document.querySelectorAll('[data-target]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const t = btn.dataset.target;
+    if (openPic && openPic.targetId === t) closePicPop();
+    else openPicPop(t);
+  });
+});
+document.querySelectorAll('[data-search]').forEach(input => {
+  input.addEventListener('input', (e) => renderPicList(input.dataset.search, e.target.value));
+});
+document.addEventListener('mousedown', (e) => {
+  if (openPic && !openPic.pop.contains(e.target) && !openPic.trigger.contains(e.target)) closePicPop();
+});
+
+// ============ File upload UX ============
+function bindDrop(dropId, inputId) {
+  const drop = document.getElementById(dropId);
+  const input = document.getElementById(inputId);
+  const textEl = drop.querySelector('.text');
+  const iconEl = drop.querySelector('.icon');
+  const original = { t: textEl.querySelector('.t').textContent, s: textEl.querySelector('.s').textContent, icon: iconEl.querySelector('.material-symbols-outlined').textContent };
+
+  input.addEventListener('change', () => {
+    if (input.files && input.files[0]) {
+      const f = input.files[0];
+      drop.classList.add('has-file');
+      textEl.querySelector('.t').textContent = f.name;
+      textEl.querySelector('.s').textContent = `${(f.size / 1024 / 1024).toFixed(2)} MB · ${f.type || 'file'}`;
+      iconEl.querySelector('.material-symbols-outlined').textContent = 'check_circle';
+      // Add clear button if not present
+      if (!drop.querySelector('.clear')) {
+        const clear = document.createElement('span');
+        clear.className = 'clear material-symbols-outlined';
+        clear.textContent = 'close';
+        clear.style.fontSize = '18px';
+        clear.title = 'Remove';
+        clear.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          input.value = '';
+          drop.classList.remove('has-file');
+          textEl.querySelector('.t').textContent = original.t;
+          textEl.querySelector('.s').textContent = original.s;
+          iconEl.querySelector('.material-symbols-outlined').textContent = original.icon;
+          clear.remove();
+        });
+        drop.appendChild(clear);
+      }
+    }
+  });
+}
+bindDrop('drop-report', 'f-report');
+bindDrop('drop-planning', 'f-planning');
+
+// ============ Submit ============
+document.getElementById('project-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const data = {
+    name:        document.getElementById('f-name').value.trim(),
+    description: document.getElementById('f-desc').value.trim(),
+    fy:          document.getElementById('f-fy').value,
+    activity:    document.getElementById('f-activity').value,
+    status:      document.getElementById('f-status').value,
+    start:       document.getElementById('f-start').value,
+    end:         document.getElementById('f-end').value,
+    completion:  document.getElementById('f-complete').value,
+    application: document.getElementById('f-application').value,
+    pic:         document.getElementById('f-pic').value,
+    appPic:      document.getElementById('f-apppic').value,
+    reportFile:  document.getElementById('f-report').files[0]?.name || null,
+    planFile:    document.getElementById('f-planning').files[0]?.name || null,
+  };
+  if (!data.pic || !data.appPic) {
+    alert('Please select both PIC and Application PIC.');
+    return;
+  }
+  // Demo only
+  alert(`Project created (demo)\n\n` + JSON.stringify(data, null, 2));
+  window.location.href = 'offsec-projects.html';
+});
+
+document.getElementById('save-draft').addEventListener('click', () => {
+  alert('Saved as draft (demo).');
+});
+</script>
+</body>
+</html>

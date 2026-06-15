@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Projects — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  /* Page-specific styles */
+  .progress-bar { width: 84px; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; transition: width 0.3s; }
+  .view-toggle { display: flex; gap: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+  .view-toggle button { background: transparent; border: 0; color: var(--text-muted); padding: 5px 9px; border-radius: 5px; cursor: pointer; font-family: inherit; display:flex; align-items:center; }
+  .view-toggle button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+  .view-toggle button .material-symbols-outlined { font-size: 18px; }
+
+  .activity-chip { display: inline-flex; align-items: center; padding: 2px 7px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.03em; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+  .activity-chip.va        { background: rgba(59,130,246,0.18); color: #93c5fd; }
+  .activity-chip.vapt      { background: rgba(168,85,247,0.18); color: #d8b4fe; }
+  .activity-chip.va-infra  { background: rgba(16,185,129,0.18); color: #86efac; }
+  .activity-chip.vapt-mob  { background: rgba(236,72,153,0.18); color: #f9a8d4; }
+  html[data-theme="light"] .activity-chip.va       { color: #1d4ed8; }
+  html[data-theme="light"] .activity-chip.vapt     { color: #6b21a8; }
+  html[data-theme="light"] .activity-chip.va-infra { color: #065f46; }
+  html[data-theme="light"] .activity-chip.vapt-mob { color: #9d174d; }
+
+  .grid-card { padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: transform 0.15s, border-color 0.15s; }
+  .grid-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+</style>
+</head>
+<body data-page="projects">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1500px; margin: 0 auto; display:flex; flex-direction:column; gap: 18px;">
+
+        <!-- Header row -->
+        <div style="display:flex; justify-content:space-between; align-items:center; gap: 16px; flex-wrap: wrap;">
+          <div style="display:flex; gap: 18px; align-items:center; flex-wrap: wrap;">
+            <div class="card" style="padding: 12px 18px; display:flex; align-items:center; gap: 12px;">
+              <div class="ico-bullet ms-fill material-symbols-outlined" style="width:32px; height:32px; font-size:18px">folder_open</div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-muted); font-weight:600">Active</div>
+                <div class="mono" style="font-size: 18px; font-weight: 800; line-height:1">12</div>
+              </div>
+            </div>
+            <div class="card" style="padding: 12px 18px; display:flex; align-items:center; gap: 12px;">
+              <div style="width:32px; height:32px; background: rgba(245,158,11,0.18); color: var(--warn); border-radius: 7px; display:flex; align-items:center; justify-content:center;">
+                <span class="material-symbols-outlined ms-fill" style="font-size:18px">schedule</span>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-muted); font-weight:600">Planned</div>
+                <div class="mono" style="font-size: 18px; font-weight: 800; line-height:1">4</div>
+              </div>
+            </div>
+            <div class="card" style="padding: 12px 18px; display:flex; align-items:center; gap: 12px;">
+              <div style="width:32px; height:32px; background: rgba(16,185,129,0.18); color: var(--accent); border-radius: 7px; display:flex; align-items:center; justify-content:center;">
+                <span class="material-symbols-outlined ms-fill" style="font-size:18px">check_circle</span>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-muted); font-weight:600">Completed</div>
+                <div class="mono" style="font-size: 18px; font-weight: 800; line-height:1">8</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap: 8px;">
+            <button class="btn btn-ghost"><span class="material-symbols-outlined">download</span>Export</button>
+            <a class="btn btn-primary" href="offsec-project-create.html"><span class="material-symbols-outlined">add</span>New project</a>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="card" style="padding: 12px 14px; display:flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div style="position: relative; flex: 1; min-width: 240px;">
+            <span class="material-symbols-outlined" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px;">search</span>
+            <input id="search" class="field" placeholder="Search projects, application, PIC…" style="padding-left: 36px;" oninput="render()"/>
+          </div>
+          <select id="f-activity" class="field" style="width: auto;" onchange="render()">
+            <option value="">All activities</option>
+            <option>VA</option><option>VAPT</option><option>VA Infra</option><option>VAPT Mobile Apps</option>
+          </select>
+          <select id="f-status" class="field" style="width: auto;" onchange="render()">
+            <option value="">All statuses</option>
+            <option>Open</option><option>In Progress</option><option>Completed</option><option>Canceled</option>
+          </select>
+          <select id="f-fy" class="field" style="width: auto;" onchange="render()">
+            <option value="">All FY</option>
+            <option>2023</option><option>2024</option><option>2025</option><option>2026</option>
+          </select>
+          <select id="f-pic" class="field" style="width: auto;" onchange="render()">
+            <option value="">All PICs</option>
+            <option>Abu Rizal Mahdi</option><option>Sarah Park</option><option>John Lee</option><option>Nur Hasbullah M.</option><option>Budi</option>
+          </select>
+          <div class="view-toggle" style="margin-left: auto;">
+            <button data-view="list" class="on" title="List"><span class="material-symbols-outlined">view_list</span></button>
+            <button data-view="grid" title="Grid"><span class="material-symbols-outlined">grid_view</span></button>
+          </div>
+        </div>
+
+        <!-- List view -->
+        <div id="view-list" class="card" style="padding: 0; overflow: hidden;">
+          <div style="overflow-x: auto;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Project</th>
+                  <th>Application</th>
+                  <th>Activity</th>
+                  <th>FY</th>
+                  <th>PIC</th>
+                  <th>Plan Start → End</th>
+                  <th>Progress</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <div id="empty" class="empty-state" style="display:none;">
+            <span class="material-symbols-outlined">folder_off</span>
+            <div class="empty-state-title">No projects match those filters.</div>
+            <div class="empty-state-sub">Try clearing a filter or creating a new project.</div>
+            <a class="btn btn-primary btn-sm" href="offsec-project-create.html" style="margin-top:6px"><span class="material-symbols-outlined">add</span>New project</a>
+          </div>
+        </div>
+
+        <!-- Grid view -->
+        <div id="view-grid" style="display:none;">
+          <div id="grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px;"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script>
+const STATUS_PILL = { 'Open':'pill-blocked', 'In Progress':'pill-progress', 'Completed':'pill-done', 'Canceled':'pill-todo' };
+const ACTIVITY_CLASS = { 'VA':'va', 'VAPT':'vapt', 'VA Infra':'va-infra', 'VAPT Mobile Apps':'vapt-mob' };
+
+const PROJECTS = [
+  { id:'PRJ-001', name:'BSI Core Infra VA — Q2',         app:'BSI - Infra',              activity:'VA Infra',          fy:2025, pic:'Abu Rizal Mahdi',  start:'2025-11-04', end:'2026-06-12', progress:65, status:'In Progress' },
+  { id:'PRJ-002', name:'MMKSI Microsite Pentest',         app:'MMKSI - Microsite',        activity:'VAPT',              fy:2025, pic:'Sarah Park',       start:'2025-11-15', end:'2026-02-10', progress:90, status:'In Progress' },
+  { id:'PRJ-003', name:'KTB HRIS Mobile Pentest',         app:'KTB - HRIS',               activity:'VAPT Mobile Apps',  fy:2025, pic:'Nur Hasbullah M.', start:'2025-12-01', end:'2026-04-30', progress:40, status:'In Progress' },
+  { id:'PRJ-004', name:'MMKSI VTS Web Audit',             app:'MMKSI - VTS',              activity:'VA',                fy:2025, pic:'John Lee',         start:'2026-02-15', end:'2026-05-30', progress:25, status:'In Progress' },
+  { id:'PRJ-005', name:'KTB D-Net Interface VAPT',        app:'KTB - D-Net Interface',    activity:'VAPT',              fy:2025, pic:'Budi',             start:'2026-03-01', end:'2026-06-15', progress:50, status:'In Progress' },
+  { id:'PRJ-006', name:'BSI Timesheet VA',                app:'BSI - Timesheet',          activity:'VA',                fy:2024, pic:'John Lee',         start:'2024-04-01', end:'2024-05-31', progress:100,status:'Completed' },
+  { id:'PRJ-007', name:'KTB FDMA Q3 Pentest',             app:'KTB - FDMA CMS Sales',     activity:'VAPT',              fy:2026, pic:'Abu Rizal Mahdi',  start:'2026-07-01', end:'2026-09-30', progress:0,  status:'Open' },
+  { id:'PRJ-008', name:'KTB Karoseri Portal VAPT',        app:'KTB - Karoseri Portal',    activity:'VAPT',              fy:2026, pic:'Sarah Park',       start:'2026-06-15', end:'2026-08-30', progress:0,  status:'Open' },
+  { id:'PRJ-009', name:'MMKSI D-Net Cancellation',        app:'MMKSI - D-Net Interface',  activity:'VAPT',              fy:2024, pic:'Nur Hasbullah M.', start:'2024-08-01', end:'2024-09-30', progress:30, status:'Canceled' },
+  { id:'PRJ-010', name:'KTB Supplier Portal VA Infra',    app:'KTB - Supplier Portal',    activity:'VA Infra',          fy:2025, pic:'Budi',             start:'2025-10-01', end:'2025-12-31', progress:100,status:'Completed' },
+  { id:'PRJ-011', name:'MMKSI Microsite Career Pentest',  app:'KTB - Microsite Career',   activity:'VAPT',              fy:2025, pic:'Abu Rizal Mahdi',  start:'2025-09-01', end:'2025-11-15', progress:100,status:'Completed' },
+  { id:'PRJ-012', name:'KTB Sparepart Catalog VA',        app:'KTB - Sparepart Catalog',  activity:'VA',                fy:2024, pic:'John Lee',         start:'2024-07-01', end:'2024-09-30', progress:100,status:'Completed' },
+];
+
+function fmtDate(d) { return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'2-digit' }); }
+function progressColor(p) { return p < 30 ? 'var(--info)' : p < 70 ? 'var(--warn)' : 'var(--accent)'; }
+
+function applyFilters() {
+  const q  = document.getElementById('search').value.toLowerCase();
+  const a  = document.getElementById('f-activity').value;
+  const s  = document.getElementById('f-status').value;
+  const fy = document.getElementById('f-fy').value;
+  const p  = document.getElementById('f-pic').value;
+  return PROJECTS.filter(r =>
+    (!q || (r.name + r.app + r.id + r.pic).toLowerCase().includes(q)) &&
+    (!a || r.activity === a) &&
+    (!s || r.status === s) &&
+    (!fy || String(r.fy) === fy) &&
+    (!p || r.pic === p)
+  );
+}
+
+function renderList(rows) {
+  const body = document.getElementById('rows');
+  const empty = document.getElementById('empty');
+  if (!rows.length) { body.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+  body.innerHTML = rows.map(r => `
+    <tr class="clickable" onclick="location.href='offsec-project-detail.html?id=${r.id}'">
+      <td><span class="mono" style="color: var(--text-muted); font-size:12px">${r.id}</span></td>
+      <td><div style="font-weight: 600; color: var(--text); font-size:13px">${r.name}</div></td>
+      <td><span style="font-size: 12.5px; color: var(--text-muted)">${r.app}</span></td>
+      <td><span class="activity-chip ${ACTIVITY_CLASS[r.activity]}">${r.activity}</span></td>
+      <td class="mono" style="font-size: 12px">${r.fy}</td>
+      <td><span style="font-size: 12px;">${r.pic}</span></td>
+      <td><span class="mono" style="font-size: 11.5px; color: var(--text-muted)">${fmtDate(r.start)} → ${fmtDate(r.end)}</span></td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px">
+          <div class="progress-bar"><div class="progress-fill" style="width:${r.progress}%; background:${progressColor(r.progress)}"></div></div>
+          <span class="mono" style="font-size:11px; color: var(--text-muted)">${r.progress}%</span>
+        </div>
+      </td>
+      <td><span class="pill ${STATUS_PILL[r.status]}"><span class="dot"></span>${r.status}</span></td>
+      <td><span class="material-symbols-outlined" style="color: var(--text-faint); font-size:18px">chevron_right</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderGrid(rows) {
+  const wrap = document.getElementById('grid');
+  if (!rows.length) {
+    wrap.innerHTML = `<div class="card empty-state" style="grid-column: 1 / -1;">
+      <span class="material-symbols-outlined">folder_off</span>
+      <div class="empty-state-title">No projects match those filters.</div>
+    </div>`;
+    return;
+  }
+  wrap.innerHTML = rows.map(r => `
+    <a class="card grid-card" href="offsec-project-detail.html?id=${r.id}" style="text-decoration: none; color: inherit;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap: 8px;">
+        <div style="min-width:0">
+          <div class="mono" style="font-size:10.5px; color: var(--text-faint)">${r.id}</div>
+          <div style="font-weight: 700; font-size: 14px; color: var(--text); margin-top: 2px; line-height: 1.3">${r.name}</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px">${r.app}</div>
+        </div>
+        <span class="pill ${STATUS_PILL[r.status]}"><span class="dot"></span>${r.status}</span>
+      </div>
+      <div style="display:flex; gap: 6px; align-items:center; flex-wrap:wrap;">
+        <span class="activity-chip ${ACTIVITY_CLASS[r.activity]}">${r.activity}</span>
+        <span class="mono" style="font-size:11px; color: var(--text-muted)">FY${r.fy}</span>
+      </div>
+      <div>
+        <div style="display:flex; align-items:center; justify-content:space-between; font-size: 11px; margin-bottom: 4px;">
+          <span style="color: var(--text-muted)">Progress</span>
+          <span class="mono" style="color: var(--text); font-weight: 600">${r.progress}%</span>
+        </div>
+        <div class="progress-bar" style="width:100%"><div class="progress-fill" style="width:${r.progress}%; background:${progressColor(r.progress)}"></div></div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--text-muted)">
+        <span>${r.pic}</span>
+        <span class="mono">${fmtDate(r.start)} → ${fmtDate(r.end)}</span>
+      </div>
+    </a>
+  `).join('');
+}
+
+let view = 'list';
+function render() {
+  const rows = applyFilters();
+  if (view === 'list') renderList(rows);
+  else renderGrid(rows);
+}
+
+document.querySelectorAll('[data-view]').forEach(b => {
+  b.addEventListener('click', () => {
+    view = b.dataset.view;
+    document.querySelectorAll('[data-view]').forEach(x => x.classList.toggle('on', x === b));
+    document.getElementById('view-list').style.display = view === 'list' ? '' : 'none';
+    document.getElementById('view-grid').style.display = view === 'grid' ? 'block' : 'none';
+    render();
+  });
+});
+
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>

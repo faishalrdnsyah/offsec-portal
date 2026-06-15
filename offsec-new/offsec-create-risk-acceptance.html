@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Request Risk Acceptance — Offensive Sec Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+<link rel="stylesheet" href="shell.css"/>
+<style>
+  /* Stepper */
+  .stepper { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .step { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; color: var(--text-muted); }
+  .step .num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); color: var(--text-muted); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .step.active { color: var(--text); background: var(--surface-2); border: 1px solid var(--border); }
+  .step.active .num { background: var(--primary); color: #fff; }
+  .step.done .num { background: var(--accent); color: #fff; }
+  .step-sep { flex: 1; height: 1px; background: var(--border); max-width: 50px; }
+
+  /* Project & type selectable cards */
+  .pick-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px;
+    border: 1px solid var(--border); border-radius: 10px;
+    cursor: pointer; transition: all 0.15s;
+    background: var(--surface);
+    text-align: left; font-family: inherit;
+    width: 100%;
+  }
+  .pick-card:hover { border-color: var(--primary); }
+  .pick-card.on { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 1px var(--primary); }
+  .pick-card.disabled { opacity: 0.5; cursor: not-allowed; }
+  .pick-icon { width: 42px; height: 42px; border-radius: 10px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 800; font-size: 13px; color: var(--text); }
+  .pick-card.on .pick-icon { background: var(--primary); color: #fff; }
+
+  /* Finding row */
+  .finding-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    border-radius: 8px; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .finding-row:hover { background: var(--surface-2); }
+  .finding-row.on { background: var(--primary-soft); border-color: rgba(220,38,38,0.25); }
+  .finding-row .cb { width: 16px; height: 16px; border: 1.5px solid var(--border-strong); border-radius: 4px; background: var(--surface); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .finding-row .cb.on { background: var(--primary); border-color: var(--primary); }
+  .finding-row .cb.on::after { content: ""; width: 8px; height: 5px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(-45deg) translate(1px, -1px); }
+
+  /* Approver picker */
+  .approver-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .approver-row .avatar { width: 32px; height: 32px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .approver-add {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 10px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+    width: 100%;
+    font-family: inherit;
+    justify-content: center;
+  }
+  .approver-add:hover { border-color: var(--primary); background: rgba(220,38,38,0.06); color: var(--primary); }
+
+  /* User picker popover */
+  .picker-pop {
+    position: absolute; z-index: 60;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-popover);
+    width: 380px; max-height: 420px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .picker-search { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .picker-list { padding: 6px; overflow-y: auto; flex: 1; }
+  .picker-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; cursor: pointer; }
+  .picker-item:hover { background: var(--surface-2); }
+  .picker-item .cb { width: 16px; height: 16px; border: 1.5px solid var(--border-strong); border-radius: 4px; background: var(--surface); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .picker-item .cb.on { background: var(--primary); border-color: var(--primary); }
+  .picker-item .cb.on::after { content: ""; width: 8px; height: 5px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(-45deg) translate(1px, -1px); }
+
+  /* Approver order tag */
+  .order-tag {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    background: var(--primary); color: #fff;
+    border-radius: 50%; font-weight: 700; font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .reason-card { padding: 16px; border: 1px solid var(--border); border-radius: 10px; }
+  .reason-card .head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+  .reason-card .head .meta { flex: 1; min-width: 0; }
+  .reason-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .reason-grid .full { grid-column: 1 / -1; }
+
+  .info-banner { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px; font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+  .info-banner .material-symbols-outlined { color: var(--info); flex-shrink: 0; font-size: 18px; }
+</style>
+</head>
+<body data-page="risk-create">
+
+<div class="shell">
+  <aside data-shell="sidebar"></aside>
+  <div style="display:flex; flex-direction:column; height:100vh; overflow:hidden; background: var(--bg);">
+    <header data-shell="topbar"></header>
+
+    <main class="flex-1 overflow-y-auto" style="padding: 22px 24px 40px">
+      <div style="max-width: 1100px; margin: 0 auto;">
+
+        <a href="offsec-risk-acceptance.html" style="display:inline-flex; align-items:center; gap: 6px; font-size: 12.5px; color: var(--text-muted); text-decoration: none; margin-bottom: 14px;">
+          <span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>
+          Risk acceptance
+        </a>
+
+        <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; color: var(--text);">Request risk acceptance</h1>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 22px; max-width: 720px; line-height: 1.55;">
+          Bundle one or more findings <i>from the same project</i> into a single RA. Each finding gets its own justification; the approvers decide once for the whole bundle.
+        </p>
+
+        <!-- Stepper -->
+        <div class="stepper" style="margin-bottom: 22px;">
+          <div class="step active" data-step="1"><span class="num">1</span> Project</div>
+          <div class="step-sep"></div>
+          <div class="step" data-step="2"><span class="num">2</span> Type &amp; findings</div>
+          <div class="step-sep"></div>
+          <div class="step" data-step="3"><span class="num">3</span> Justification</div>
+          <div class="step-sep"></div>
+          <div class="step" data-step="4"><span class="num">4</span> Approvers</div>
+          <div class="step-sep"></div>
+          <div class="step" data-step="5"><span class="num">5</span> Review</div>
+        </div>
+
+        <div class="card" style="padding: 22px;">
+
+          <!-- ============ STEP 1: Project ============ -->
+          <div data-pane="1">
+            <div class="card-title" style="margin-bottom: 4px;">Select project</div>
+            <p class="card-sub" style="margin-bottom: 18px;">One RA covers one project. Only projects you own as PIC are selectable.</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="proj-list"></div>
+          </div>
+
+          <!-- ============ STEP 2: Type & findings ============ -->
+          <div data-pane="2" style="display: none;">
+            <div class="card-title" style="margin-bottom: 4px;">Acceptance type</div>
+            <p class="card-sub" style="margin-bottom: 14px;">Determines the maximum duration. Type can't change after submission.</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="type-list"></div>
+
+            <div style="padding-top: 22px; margin-top: 22px; border-top: 1px solid var(--border)">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 12px;">
+                <div>
+                  <div class="card-title">Pick findings to accept</div>
+                  <p class="card-sub" style="margin-top: 4px;">From <b style="color: var(--text)" id="proj-name">…</b> · findings that won't be remediated within SLA.</p>
+                </div>
+                <div style="display:flex; gap: 10px; align-items: center;">
+                  <input id="f-search" class="field" placeholder="Filter findings…" style="width: 200px; padding: 6px 10px;" oninput="renderFindings()"/>
+                  <span class="mono" style="font-size: 11.5px; color: var(--text-muted)" id="sel-count">0 selected</span>
+                </div>
+              </div>
+
+              <div style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px;">
+                <div id="findings-list" style="display:flex; flex-direction:column; gap: 2px;"></div>
+                <div id="findings-empty" class="empty-state" style="display:none">
+                  <span class="material-symbols-outlined">verified</span>
+                  <div class="empty-state-title">No open findings</div>
+                  <div class="empty-state-sub">Nothing to request acceptance for in this project.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ STEP 3: Justification ============ -->
+          <div data-pane="3" style="display: none;">
+            <div class="card-title" style="margin-bottom: 4px;">Justification per finding</div>
+            <p class="card-sub" style="margin-bottom: 18px;">Four fields per finding: <b>feedback</b> (what's been done), <b>contingency</b> (backup plan if exploited), <b>reason</b> (why accept), <b>due date</b> (per-item expiry).</p>
+            <div id="reasons-list" style="display:flex; flex-direction:column; gap: 14px;"></div>
+          </div>
+
+          <!-- ============ STEP 4: Approvers ============ -->
+          <div data-pane="4" style="display: none;">
+            <div class="card-title" style="margin-bottom: 4px;">Period &amp; approvers</div>
+            <p class="card-sub" style="margin-bottom: 22px;">One acceptance period covers all bundled findings. Pick the users who must sign off — they will approve in the order shown.</p>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px;">
+              <div>
+                <label class="field-label">Valid from <span style="color: var(--primary)">*</span></label>
+                <input id="d-from" class="field mono" type="date" value="2026-05-26"/>
+              </div>
+              <div>
+                <label class="field-label">Expires <span style="color: var(--primary)">*</span></label>
+                <input id="d-to" class="field mono" type="date" value="2026-08-26"/>
+                <div id="d-hint" class="mono" style="font-size: 10.5px; color: var(--text-faint); margin-top: 4px;">—</div>
+              </div>
+            </div>
+
+            <label class="field-label">Approvers <span style="color: var(--primary)">*</span></label>
+            <p style="font-size: 11.5px; color: var(--text-muted); margin: -2px 0 10px;">Select the people who need to approve this risk acceptance. Each is notified in turn.</p>
+
+            <div id="approvers-list" style="display:flex; flex-direction:column; gap: 8px; margin-bottom: 10px;"></div>
+
+            <div style="position: relative;" id="picker-anchor">
+              <button class="approver-add" id="add-approver-btn" type="button">
+                <span class="material-symbols-outlined">person_add</span>
+                Add approver
+              </button>
+              <div id="picker-pop" class="picker-pop" style="display: none;"></div>
+            </div>
+
+            <div style="margin-top: 22px;">
+              <div class="info-banner">
+                <span class="material-symbols-outlined ms-fill">info</span>
+                <div>
+                  On submit, the first approver gets an in-app notification. Once they approve, the next approver in the list is notified — sequential workflow.
+                  You can reorder approvers by dragging or using the up/down arrows.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ STEP 5: Review ============ -->
+          <div data-pane="5" style="display: none;">
+            <div class="card-title" style="margin-bottom: 4px;">Review</div>
+            <p class="card-sub" style="margin-bottom: 20px;">Last look before routing to <b id="r-first-approver">…</b>.</p>
+
+            <div style="background: var(--surface-2); border: 1px solid var(--border); padding: 18px; border-radius: 10px; margin-bottom: 16px;">
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; font-size: 12.5px;">
+                <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">RA-ID (preview)</div><div class="mono" id="r-id" style="font-weight: 700">BSI-RA-014</div></div>
+                <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">Project</div><div id="r-proj">—</div></div>
+                <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">Findings bundled</div><div id="r-count" class="mono" style="font-weight: 700">—</div></div>
+                <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">Highest severity</div><div id="r-sev">—</div></div>
+                <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">Valid from</div><div id="r-from" class="mono">—</div></div>
+                <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">Expires</div><div id="r-to" class="mono">—</div></div>
+              </div>
+            </div>
+
+            <label class="field-label" style="margin-top: 16px;">Approval chain</label>
+            <div id="r-approvers" style="display:flex; flex-direction:column; gap: 6px; margin-bottom: 18px;"></div>
+
+            <label class="field-label">Bundled findings</label>
+            <div id="r-findings" style="display:flex; flex-direction:column; gap: 6px;"></div>
+          </div>
+
+          <!-- Footer -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--border)">
+            <button type="button" class="btn btn-ghost" id="back-btn" disabled style="opacity:0.4">
+              <span class="material-symbols-outlined">arrow_back</span>Back
+            </button>
+            <div style="display:flex; gap: 8px;">
+              <a class="btn btn-ghost" href="offsec-risk-acceptance.html">Cancel</a>
+              <button type="button" class="btn btn-soft" id="draft-btn">Save draft</button>
+              <button type="button" class="btn btn-primary" id="next-btn">
+                Continue<span class="material-symbols-outlined">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="shell.js"></script>
+<script>
+/* ============== DATA ============== */
+const PROJECTS = [
+  { id:'PRJ-001', name:'BSI Core Infra VA — Q2',  app:'BSI - Infra',           code:'BSI', openFindings:5, role:'PIC' },
+  { id:'PRJ-002', name:'KTB HRIS Mobile Pentest', app:'KTB - HRIS',            code:'KTB', openFindings:3, role:'PIC' },
+  { id:'PRJ-003', name:'MMKSI VTS Web Audit',     app:'MMKSI - VTS',           code:'MMK', openFindings:2, role:'Reviewer', disabled:true },
+  { id:'PRJ-004', name:'KTB D-Net Interface VAPT',app:'KTB - D-Net Interface', code:'KTB', openFindings:4, role:'PIC' },
+];
+
+const FINDINGS_BY_PROJECT = {
+  'PRJ-001': [
+    { id:'F-2810', sev:'high',   cvss:8.2, title:'SQL Injection on /api/v2/users endpoint',          cwe:'CWE-89',  sla:'2d overdue' },
+    { id:'F-2812', sev:'medium', cvss:5.4, title:'Outdated jQuery on /support marketing page',       cwe:'CWE-1104',sla:'12d left'   },
+    { id:'F-2815', sev:'medium', cvss:6.4, title:'Missing rate-limit on /auth/login',                cwe:'CWE-307', sla:'8d overdue' },
+    { id:'F-2820', sev:'low',    cvss:3.7, title:'Missing security headers — CSP, HSTS, X-Frame',    cwe:'CWE-693', sla:'ok'         },
+    { id:'F-2822', sev:'medium', cvss:5.8, title:'Verbose error stack-traces in 5xx pages',          cwe:'CWE-209', sla:'ok'         },
+  ],
+  'PRJ-002': [
+    { id:'F-2841', sev:'high',   cvss:7.5, title:'Stored XSS on profile bio field',                  cwe:'CWE-79',  sla:'5d left'    },
+    { id:'F-2843', sev:'medium', cvss:6.0, title:'Cert pinning disabled in legacy Android client',   cwe:'CWE-295', sla:'7d left'    },
+    { id:'F-2845', sev:'medium', cvss:5.9, title:'Sensitive data in client-side localStorage',       cwe:'CWE-922', sla:'ok'         },
+  ],
+  'PRJ-004': [
+    { id:'F-2851', sev:'high',   cvss:7.2, title:'IDOR — orders accessible across tenants',          cwe:'CWE-639', sla:'3d overdue' },
+    { id:'F-2853', sev:'medium', cvss:6.1, title:'CSRF token missing on /settings/profile',          cwe:'CWE-352', sla:'ok'         },
+    { id:'F-2854', sev:'low',    cvss:4.3, title:'Cookie missing SameSite=Strict on session',        cwe:'CWE-1275',sla:'ok'         },
+    { id:'F-2855', sev:'info',   cvss:0,   title:'X-Powered-By header discloses framework',          cwe:'CWE-200', sla:'—'          },
+  ],
+};
+
+const USERS = [
+  { id:'MD', name:'Mark Diaz',         role:'CISO',                color:'#dc2626' },
+  { id:'LW', name:'Lisa Wong',         role:'Risk Manager',        color:'#3b82f6' },
+  { id:'AI', name:'Ari Wibowo',        role:'KTB · IT Manager',    color:'#06b6d4' },
+  { id:'ML', name:'Maya Lim',          role:'MMKSI · Product Owner',color:'#10b981' },
+  { id:'AR', name:'Abu Rizal Mahdi',   role:'Security Lead',       color:'#a855f7' },
+  { id:'SP', name:'Sarah Park',        role:'Pentester · Network', color:'#f59e0b' },
+  { id:'JL', name:'John Lee',          role:'Pentester · Web',     color:'#8b5cf6' },
+  { id:'NH', name:'Nur Hasbullah M.',  role:'Pentester · Mobile',  color:'#ec4899' },
+  { id:'BD', name:'Budi',              role:'Pentester · Infra',   color:'#f97316' },
+];
+
+const RA_TYPES = {
+  short: { label:'Short-term', subtitle:'Until next quarterly cycle', icon:'schedule', maxDays:90,  suggestedDate:'2026-08-26' },
+  long:  { label:'Long-term',  subtitle:'Until next annual VA/VAPT',  icon:'event',    maxDays:365, suggestedDate:'2027-05-26' },
+};
+
+const SEV_LABELS = { critical:'CRITICAL', high:'HIGH', medium:'MEDIUM', low:'LOW', info:'INFO' };
+const SEV_RANK = { critical:5, high:4, medium:3, low:2, info:1 };
+
+/* ============== STATE ============== */
+let curStep = 1;
+let selectedProject = null;
+let selectedType = null;
+let selectedFindings = new Set();
+let items = {}; // findingId -> { feedback, contingency, reason, dueDate }
+let approvers = []; // ordered list of user IDs
+let pickerOpen = false;
+
+/* ============== STEP NAV ============== */
+function showStep() {
+  document.querySelectorAll('.step').forEach(s => {
+    const n = +s.dataset.step;
+    s.classList.toggle('active', n === curStep);
+    s.classList.toggle('done',   n <  curStep);
+  });
+  document.querySelectorAll('[data-pane]').forEach(p => p.style.display = +p.dataset.pane === curStep ? '' : 'none');
+  const back = document.getElementById('back-btn');
+  back.disabled = curStep === 1;
+  back.style.opacity = curStep === 1 ? 0.4 : 1;
+  const next = document.getElementById('next-btn');
+  if (curStep === 5) {
+    next.innerHTML = '<span class="material-symbols-outlined">send</span>Submit for approval';
+  } else {
+    next.innerHTML = 'Continue<span class="material-symbols-outlined">arrow_forward</span>';
+  }
+}
+function go(delta) {
+  if (delta > 0) {
+    if (curStep === 1 && !selectedProject) { alert('Select a project first'); return; }
+    if (curStep === 2) {
+      if (!selectedType) { alert('Choose an acceptance type'); return; }
+      if (selectedFindings.size === 0) { alert('Pick at least one finding to accept'); return; }
+    }
+    if (curStep === 3) {
+      for (const id of selectedFindings) {
+        if (!items[id] || !items[id].reason || !items[id].reason.trim()) {
+          alert('Each finding needs a reason'); return;
+        }
+      }
+    }
+    if (curStep === 4) {
+      if (approvers.length === 0) { alert('Add at least one approver'); return; }
+      renderReview();
+    }
+  }
+  if (curStep === 5 && delta > 0) { submitRA(); return; }
+  curStep = Math.min(5, Math.max(1, curStep + delta));
+  showStep();
+  // Lazy-render the pane content as we enter each step
+  if (curStep === 2) renderFindings();
+  if (curStep === 3) renderReasons();
+  if (curStep === 4) renderApprovers();
+}
+
+function submitRA() {
+  const code = selectedProject.code;
+  const id = document.getElementById('r-id').textContent;
+  const first = USERS.find(u => u.id === approvers[0]);
+  alert(`Risk acceptance ${id} submitted — routed to ${first.name} (${first.role})`);
+  window.location.href = 'offsec-risk-acceptance.html';
+}
+
+/* ============== STEP 1: Projects ============== */
+function renderProjects() {
+  document.getElementById('proj-list').innerHTML = PROJECTS.map(p => `
+    <button type="button" class="pick-card ${selectedProject?.id === p.id ? 'on' : ''} ${p.disabled ? 'disabled' : ''}" data-proj="${p.id}" ${p.disabled ? 'disabled' : ''}>
+      <div class="pick-icon">${p.code}</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size: 13.5px; font-weight: 700; color: var(--text);">${p.name}</div>
+        <div style="font-size: 11.5px; color: var(--text-muted); margin-top:2px;">${p.app} · ${p.id}</div>
+        <div style="display:flex; gap: 6px; margin-top: 6px;">
+          <span class="pill ${p.role === 'PIC' ? 'pill-approved' : 'pill-todo'}" style="font-size: 10px;">${p.role.toUpperCase()}</span>
+          <span class="pill pill-blocked" style="font-size: 10px;"><span class="dot"></span>${p.openFindings} OPEN</span>
+        </div>
+      </div>
+      ${selectedProject?.id === p.id ? '<span class="material-symbols-outlined ms-fill" style="color: var(--primary)">check_circle</span>' : ''}
+    </button>
+  `).join('');
+  document.querySelectorAll('[data-proj]').forEach(btn => {
+    if (btn.disabled) return;
+    btn.addEventListener('click', () => pickProject(btn.dataset.proj));
+  });
+}
+
+function pickProject(id) {
+  selectedProject = PROJECTS.find(p => p.id === id);
+  selectedFindings.clear();
+  items = {};
+  selectedType = null;
+  const nameEl = document.getElementById('proj-name');
+  if (nameEl) nameEl.textContent = `${selectedProject.app} · ${selectedProject.name}`;
+  renderProjects();
+}
+
+/* ============== STEP 2: Type + findings ============== */
+function renderTypes() {
+  document.getElementById('type-list').innerHTML = Object.entries(RA_TYPES).map(([k, t]) => `
+    <button type="button" class="pick-card ${selectedType === k ? 'on' : ''}" data-type="${k}">
+      <div class="pick-icon">
+        <span class="material-symbols-outlined">${t.icon}</span>
+      </div>
+      <div style="flex:1; min-width:0;">
+        <div style="display:flex; align-items:center; gap: 8px;">
+          <div style="font-size: 13.5px; font-weight: 700; color: var(--text);">${t.label}</div>
+          <span class="pill ${k === 'short' ? 'pill-pending' : 'pill-progress'}" style="font-size: 10px;">≤ ${t.maxDays}d</span>
+        </div>
+        <div style="font-size: 11.5px; color: var(--text-muted); margin-top:2px;">${t.subtitle}</div>
+      </div>
+    </button>
+  `).join('');
+  document.querySelectorAll('[data-type]').forEach(btn => btn.addEventListener('click', () => {
+    selectedType = btn.dataset.type;
+    document.getElementById('d-to').value = RA_TYPES[selectedType].suggestedDate;
+    renderTypes();
+  }));
+}
+
+function renderFindings() {
+  if (!selectedProject) return;
+  const q = document.getElementById('f-search').value.toLowerCase();
+  const list = (FINDINGS_BY_PROJECT[selectedProject.id] || []).filter(f =>
+    !q || (f.id + f.title + f.cwe).toLowerCase().includes(q)
+  );
+  const wrap = document.getElementById('findings-list');
+  const empty = document.getElementById('findings-empty');
+  if (!list.length) { wrap.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+  wrap.innerHTML = list.map(f => {
+    const on = selectedFindings.has(f.id);
+    return `<div class="finding-row ${on ? 'on' : ''}" data-find="${f.id}">
+      <div class="cb ${on ? 'on' : ''}"></div>
+      <span class="mono" style="font-size: 11px; color: var(--text-faint); width:55px;">${f.id}</span>
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:600; font-size: 13px; color: var(--text);">${f.title}</div>
+        <div class="mono" style="font-size: 11px; color: var(--text-faint); margin-top:2px;">${f.cwe} · SLA: ${f.sla}</div>
+      </div>
+      <span class="sev sev-${f.sev}">${SEV_LABELS[f.sev]} ${f.cvss > 0 ? f.cvss.toFixed(1) : ''}</span>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('[data-find]').forEach(row => row.addEventListener('click', () => {
+    const id = row.dataset.find;
+    if (selectedFindings.has(id)) selectedFindings.delete(id);
+    else selectedFindings.add(id);
+    renderFindings();
+    document.getElementById('sel-count').textContent = `${selectedFindings.size} selected`;
+  }));
+  document.getElementById('sel-count').textContent = `${selectedFindings.size} selected`;
+}
+
+/* ============== STEP 3: Justifications ============== */
+function renderReasons() {
+  const list = (FINDINGS_BY_PROJECT[selectedProject.id] || []).filter(f => selectedFindings.has(f.id));
+  document.getElementById('reasons-list').innerHTML = list.map(f => {
+    const it = items[f.id] || {};
+    return `<div class="reason-card">
+      <div class="head">
+        <span class="sev sev-${f.sev}">${SEV_LABELS[f.sev]} ${f.cvss > 0 ? f.cvss.toFixed(1) : ''}</span>
+        <div class="meta">
+          <div style="font-weight: 600; font-size: 13.5px; color: var(--text);">${f.title}</div>
+          <div class="mono" style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">${f.id} · ${f.cwe}</div>
+        </div>
+      </div>
+      <div class="reason-grid">
+        <div class="full">
+          <label class="field-label">Reason for acceptance <span style="color: var(--primary)">*</span></label>
+          <textarea class="field" data-field="reason" data-id="${f.id}" placeholder="Why is this acceptable risk?…">${it.reason || ''}</textarea>
+        </div>
+        <div>
+          <label class="field-label">Feedback / what's been done</label>
+          <textarea class="field" data-field="feedback" data-id="${f.id}" placeholder="Compensating controls in place…">${it.feedback || ''}</textarea>
+        </div>
+        <div>
+          <label class="field-label">Contingency plan</label>
+          <textarea class="field" data-field="contingency" data-id="${f.id}" placeholder="What we'll do if exploited…">${it.contingency || ''}</textarea>
+        </div>
+        <div class="full">
+          <label class="field-label">Per-item due date</label>
+          <input class="field mono" data-field="dueDate" data-id="${f.id}" type="date" value="${it.dueDate || ''}"/>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('[data-field]').forEach(el => {
+    el.addEventListener('input', () => {
+      const id = el.dataset.id;
+      const k  = el.dataset.field;
+      if (!items[id]) items[id] = {};
+      items[id][k] = el.value;
+    });
+  });
+}
+
+/* ============== STEP 4: Approvers ============== */
+function renderApprovers() {
+  document.getElementById('approvers-list').innerHTML = approvers.map((uid, i) => {
+    const u = USERS.find(x => x.id === uid);
+    return `<div class="approver-row" data-uid="${uid}">
+      <span class="order-tag">${i + 1}</span>
+      <span class="avatar" style="background:${u.color}">${userInitials(u.name)}</span>
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight: 600; font-size: 13px; color: var(--text);">${u.name}</div>
+        <div style="font-size: 11.5px; color: var(--text-muted);">${u.role}</div>
+      </div>
+      <button type="button" class="tb-btn" style="height:28px; min-width:28px;" data-action="up" ${i === 0 ? 'disabled' : ''} title="Move up">
+        <span class="material-symbols-outlined" style="font-size:16px">arrow_upward</span>
+      </button>
+      <button type="button" class="tb-btn" style="height:28px; min-width:28px;" data-action="down" ${i === approvers.length - 1 ? 'disabled' : ''} title="Move down">
+        <span class="material-symbols-outlined" style="font-size:16px">arrow_downward</span>
+      </button>
+      <button type="button" class="tb-btn" style="height:28px; min-width:28px;" data-action="remove" title="Remove">
+        <span class="material-symbols-outlined" style="font-size:16px">close</span>
+      </button>
+    </div>`;
+  }).join('') || `<div style="font-size: 12px; color: var(--text-faint); padding: 12px; text-align: center;">No approvers yet — add at least one below.</div>`;
+
+  document.querySelectorAll('.approver-row').forEach(row => {
+    const uid = row.dataset.uid;
+    row.querySelector('[data-action="up"]')?.addEventListener('click', () => moveApprover(uid, -1));
+    row.querySelector('[data-action="down"]')?.addEventListener('click', () => moveApprover(uid, 1));
+    row.querySelector('[data-action="remove"]')?.addEventListener('click', () => removeApprover(uid));
+  });
+}
+
+function moveApprover(uid, delta) {
+  const i = approvers.indexOf(uid);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= approvers.length) return;
+  [approvers[i], approvers[j]] = [approvers[j], approvers[i]];
+  renderApprovers();
+}
+function removeApprover(uid) {
+  approvers = approvers.filter(x => x !== uid);
+  renderApprovers();
+}
+function toggleApprover(uid) {
+  if (approvers.includes(uid)) approvers = approvers.filter(x => x !== uid);
+  else approvers.push(uid);
+  renderApprovers();
+  renderPicker();
+}
+
+function renderPicker(query = '') {
+  const q = query.toLowerCase();
+  const items = USERS.filter(u => !q || u.name.toLowerCase().includes(q) || u.role.toLowerCase().includes(q));
+  const pop = document.getElementById('picker-pop');
+  pop.innerHTML = `
+    <div class="picker-search">
+      <input class="field" id="picker-search-input" placeholder="Search users…" value="${query.replace(/"/g,'&quot;')}"/>
+    </div>
+    <div class="picker-list">
+      ${items.map(u => {
+        const on = approvers.includes(u.id);
+        return `<div class="picker-item" data-uid="${u.id}">
+          <div class="cb ${on ? 'on' : ''}"></div>
+          <span class="avatar" style="width:28px; height:28px; border-radius:50%; color:#fff; font-weight:700; font-size:10.5px; background:${u.color}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${userInitials(u.name)}</span>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size: 13px; font-weight: 500; color: var(--text);">${u.name}</div>
+            <div style="font-size: 11px; color: var(--text-muted);">${u.role}</div>
+          </div>
+        </div>`;
+      }).join('') || `<div style="text-align:center; color: var(--text-faint); padding:14px; font-size:12px">No users match</div>`}
+    </div>
+  `;
+  const input = pop.querySelector('#picker-search-input');
+  input.addEventListener('input', (e) => { renderPicker(e.target.value); pop.querySelector('#picker-search-input').focus(); });
+  setTimeout(() => input.focus(), 0);
+  pop.querySelectorAll('[data-uid]').forEach(el => el.addEventListener('click', () => toggleApprover(el.dataset.uid)));
+}
+
+function openPicker() {
+  pickerOpen = true;
+  const pop = document.getElementById('picker-pop');
+  pop.style.display = 'block';
+  // Position above or below depending on space
+  const anchor = document.getElementById('add-approver-btn');
+  const rect = anchor.getBoundingClientRect();
+  pop.style.position = 'absolute';
+  pop.style.top = `${anchor.offsetHeight + 6}px`;
+  pop.style.left = '0';
+  pop.style.right = 'auto';
+  pop.style.width = '380px';
+  renderPicker();
+}
+function closePicker() { pickerOpen = false; document.getElementById('picker-pop').style.display = 'none'; }
+
+document.addEventListener('mousedown', (e) => {
+  const anchor = document.getElementById('picker-anchor');
+  if (pickerOpen && anchor && !anchor.contains(e.target)) closePicker();
+});
+
+function userInitials(name) {
+  return name.split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase();
+}
+
+/* ============== STEP 5: Review ============== */
+function renderReview() {
+  const code = selectedProject.code;
+  const nextNum = 14 + Math.floor(Math.random() * 5);
+  document.getElementById('r-id').textContent = `${code}-RA-0${nextNum}`;
+  document.getElementById('r-proj').textContent = `${selectedProject.app} · ${selectedProject.name}`;
+  document.getElementById('r-count').textContent = `${selectedFindings.size} finding${selectedFindings.size === 1 ? '' : 's'}`;
+
+  const flist = (FINDINGS_BY_PROJECT[selectedProject.id] || []).filter(f => selectedFindings.has(f.id));
+  // highest severity
+  const top = flist.slice().sort((a, b) => SEV_RANK[b.sev] - SEV_RANK[a.sev])[0];
+  document.getElementById('r-sev').innerHTML = top ? `<span class="sev sev-${top.sev}">${SEV_LABELS[top.sev]}</span>` : '—';
+  document.getElementById('r-from').textContent = document.getElementById('d-from').value;
+  document.getElementById('r-to').textContent   = document.getElementById('d-to').value;
+
+  const first = USERS.find(u => u.id === approvers[0]);
+  document.getElementById('r-first-approver').textContent = first ? `${first.name} (${first.role})` : '—';
+
+  document.getElementById('r-approvers').innerHTML = approvers.map((uid, i) => {
+    const u = USERS.find(x => x.id === uid);
+    return `<div class="approver-row">
+      <span class="order-tag">${i + 1}</span>
+      <span class="avatar" style="background:${u.color}">${userInitials(u.name)}</span>
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight: 600; font-size: 13px;">${u.name}</div>
+        <div style="font-size: 11.5px; color: var(--text-muted);">${u.role}</div>
+      </div>
+      <span class="pill ${i === 0 ? 'pill-pending' : 'pill-todo'}">${i === 0 ? 'NOTIFIED FIRST' : 'WAITING'}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('r-findings').innerHTML = flist.map(f => {
+    const it = items[f.id] || {};
+    return `<div style="display:flex; align-items:center; gap: 10px; padding: 10px 12px; background: var(--surface-2); border-radius: 8px;">
+      <span class="sev sev-${f.sev}">${SEV_LABELS[f.sev]}</span>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size: 13px; font-weight: 600; color: var(--text);">${f.title}</div>
+        <div class="mono" style="font-size: 11px; color: var(--text-faint); margin-top: 2px;">${f.id} · Due: ${it.dueDate || '—'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============== Date hint ============== */
+function updateDateHint() {
+  const from = new Date(document.getElementById('d-from').value);
+  const to = new Date(document.getElementById('d-to').value);
+  if (isNaN(from) || isNaN(to)) return;
+  const days = Math.ceil((to - from) / (1000 * 60 * 60 * 24));
+  document.getElementById('d-hint').textContent = `${days} day${days === 1 ? '' : 's'} total`;
+}
+
+/* ============== INIT ============== */
+document.addEventListener('DOMContentLoaded', () => {
+  renderProjects();
+  renderTypes();
+  renderApprovers();
+  updateDateHint();
+  document.getElementById('next-btn').addEventListener('click', () => go(1));
+  document.getElementById('back-btn').addEventListener('click', () => go(-1));
+  document.getElementById('draft-btn').addEventListener('click', () => { alert('Saved as draft (demo).'); });
+  document.getElementById('d-from').addEventListener('change', updateDateHint);
+  document.getElementById('d-to').addEventListener('change', updateDateHint);
+  document.getElementById('add-approver-btn').addEventListener('click', () => pickerOpen ? closePicker() : openPicker());
+});
+</script>
+</body>
+</html>
