@@ -237,7 +237,7 @@
 
             <div style="background: var(--surface-2); border: 1px solid var(--border); padding: 18px; border-radius: 10px; margin-bottom: 16px;">
               <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; font-size: 12.5px;">
-                <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">RA-ID (preview)</div><div class="mono" id="r-id" style="font-weight: 700">BSI-RA-014</div></div>
+                <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">RA-ID (preview)</div><div class="mono" id="r-id" style="font-weight: 700">NSB-RA-014</div></div>
                 <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">Project</div><div id="r-proj">—</div></div>
                 <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">Findings bundled</div><div id="r-count" class="mono" style="font-weight: 700">—</div></div>
                 <div><div class="mono" style="color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom:2px">Highest severity</div><div id="r-sev">—</div></div>
@@ -278,10 +278,10 @@
 <script>
 /* ============== DATA ============== */
 const PROJECTS = [
-  { id:'PRJ-001', name:'BSI Core Infra VA — Q2',  app:'BSI - Infra',           code:'BSI', openFindings:5, role:'PIC' },
-  { id:'PRJ-002', name:'KTB HRIS Mobile Pentest', app:'KTB - HRIS',            code:'KTB', openFindings:3, role:'PIC' },
-  { id:'PRJ-003', name:'MMKSI VTS Web Audit',     app:'MMKSI - VTS',           code:'MMK', openFindings:2, role:'Reviewer', disabled:true },
-  { id:'PRJ-004', name:'KTB D-Net Interface VAPT',app:'KTB - D-Net Interface', code:'KTB', openFindings:4, role:'PIC' },
+  { id:'PRJ-001', name:'Northstar Bank Core Infra VA — Q2',  app:'Northstar Bank - Infra',           code:'Northstar Bank', openFindings:5, role:'PIC' },
+  { id:'PRJ-002', name:'Trimatra Auto HRIS Mobile Pentest', app:'Trimatra Auto - HRIS',            code:'Trimatra Auto', openFindings:3, role:'PIC' },
+  { id:'PRJ-003', name:'Wahana Motorindo VTS Web Audit',     app:'Wahana Motorindo - VTS',           code:'MMK', openFindings:2, role:'Reviewer', disabled:true },
+  { id:'PRJ-004', name:'Trimatra Auto D-Net Interface VAPT',app:'Trimatra Auto - D-Net Interface', code:'Trimatra Auto', openFindings:4, role:'PIC' },
 ];
 
 const FINDINGS_BY_PROJECT = {
@@ -308,8 +308,8 @@ const FINDINGS_BY_PROJECT = {
 const USERS = [
   { id:'MD', name:'Mark Diaz',         role:'CISO',                color:'#dc2626' },
   { id:'LW', name:'Lisa Wong',         role:'Risk Manager',        color:'#3b82f6' },
-  { id:'AI', name:'Ari Wibowo',        role:'KTB · IT Manager',    color:'#06b6d4' },
-  { id:'ML', name:'Maya Lim',          role:'MMKSI · Product Owner',color:'#10b981' },
+  { id:'AI', name:'Ari Wibowo',        role:'Trimatra Auto · IT Manager',    color:'#06b6d4' },
+  { id:'ML', name:'Maya Lim',          role:'Wahana Motorindo · Product Owner',color:'#10b981' },
   { id:'AR', name:'Abu Rizal Mahdi',   role:'Security Lead',       color:'#a855f7' },
   { id:'SP', name:'Sarah Park',        role:'Pentester · Network', color:'#f59e0b' },
   { id:'JL', name:'John Lee',          role:'Pentester · Web',     color:'#8b5cf6' },

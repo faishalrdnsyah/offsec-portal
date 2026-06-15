@@ -22,11 +22,11 @@ function toast(msg, kind = 'info', ms = 2200) {
 const PEOPLE = ['Abu Rizal Mahdi', 'Sarah Park', 'John Lee', 'Budi', 'Nur Hasbullah M.'];
 const ME = 'Abu Rizal Mahdi';
 const PROJECT_OPTIONS = [
-  'BSI Core Infra VA — Q2',
-  'MMKSI Microsite Pentest',
-  'KTB HRIS Mobile Pentest',
-  'MMKSI VTS Web Audit',
-  'KTB D-Net Interface VAPT',
+  'Northstar Bank Core Infra VA — Q2',
+  'Wahana Motorindo Microsite Pentest',
+  'Trimatra Auto HRIS Mobile Pentest',
+  'Wahana Motorindo VTS Web Audit',
+  'Trimatra Auto D-Net Interface VAPT',
 ];
 
 // ---------- KPI strip (from real findings) ----------
@@ -72,11 +72,11 @@ function renderPriority() {
 // ---------- Tasks ----------
 const STATUS_PILL = { 'To Do': 'pill-todo', 'In Progress': 'pill-progress', 'In Review': 'pill-review', 'Done': 'pill-done' };
 let tasks = [
-  { id: 1, desc: 'Triage critical SQLi on BSI - Infra (FND-1042)',         proj: 'BSI Core Infra VA — Q2',   pic: 'Abu Rizal Mahdi',  due: '2026-05-27', st: 'In Progress' },
-  { id: 2, desc: 'Re-test default Tomcat manager creds on MMKSI - VTS',     proj: 'MMKSI VTS Web Audit',      pic: 'Abu Rizal Mahdi',  due: '2026-05-29', st: 'To Do' },
-  { id: 3, desc: 'Draft RA narrative — KTB HRIS hard-coded API key',        proj: 'KTB HRIS Mobile Pentest',  pic: 'Abu Rizal Mahdi',  due: '2026-05-25', st: 'In Review' },
-  { id: 4, desc: 'Verify SSRF remediation on KTB - D-Net webhook',          proj: 'KTB D-Net Interface VAPT', pic: 'Budi',             due: '2026-06-03', st: 'To Do' },
-  { id: 5, desc: 'Finalize MMKSI Microsite Pentest report',                 proj: 'MMKSI Microsite Pentest',  pic: 'Sarah Park',       due: '2026-04-30', st: 'Done' },
+  { id: 1, desc: 'Triage critical SQLi on Northstar Bank - Infra (FND-1042)',         proj: 'Northstar Bank Core Infra VA — Q2',   pic: 'Abu Rizal Mahdi',  due: '2026-05-27', st: 'In Progress' },
+  { id: 2, desc: 'Re-test default Tomcat manager creds on Wahana Motorindo - VTS',     proj: 'Wahana Motorindo VTS Web Audit',      pic: 'Abu Rizal Mahdi',  due: '2026-05-29', st: 'To Do' },
+  { id: 3, desc: 'Draft RA narrative — Trimatra Auto HRIS hard-coded API key',        proj: 'Trimatra Auto HRIS Mobile Pentest',  pic: 'Abu Rizal Mahdi',  due: '2026-05-25', st: 'In Review' },
+  { id: 4, desc: 'Verify SSRF remediation on Trimatra Auto - D-Net webhook',          proj: 'Trimatra Auto D-Net Interface VAPT', pic: 'Budi',             due: '2026-06-03', st: 'To Do' },
+  { id: 5, desc: 'Finalize Wahana Motorindo Microsite Pentest report',                 proj: 'Wahana Motorindo Microsite Pentest',  pic: 'Sarah Park',       due: '2026-04-30', st: 'Done' },
 ];
 let nextId = 6;
 let filter = 'all';

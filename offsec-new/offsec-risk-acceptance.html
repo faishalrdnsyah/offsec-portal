@@ -62,7 +62,7 @@
           <div class="card stat-card">
             <div class="label">Expiring ≤30d</div>
             <div class="value mono" style="color: var(--primary)">1</div>
-            <div class="sub">BSI-RA-005 — Jun 8</div>
+            <div class="sub">NSB-RA-005 — Jun 8</div>
           </div>
         </div>
 
@@ -83,12 +83,12 @@
           </div>
           <select id="f-app" class="field" style="width: auto;" onchange="render()">
             <option value="">All applications</option>
-            <option>BSI - Infra</option>
-            <option>MMKSI - Microsite</option>
-            <option>KTB - HRIS</option>
-            <option>MMKSI - VTS</option>
-            <option>BSI - Timesheet</option>
-            <option>KTB - D-Net Interface</option>
+            <option>Northstar Bank - Infra</option>
+            <option>Wahana Motorindo - Microsite</option>
+            <option>Trimatra Auto - HRIS</option>
+            <option>Wahana Motorindo - VTS</option>
+            <option>Northstar Bank - Timesheet</option>
+            <option>Trimatra Auto - D-Net Interface</option>
           </select>
           <select id="f-pic" class="field" style="width: auto;" onchange="render()">
             <option value="">All PICs</option>
@@ -135,20 +135,20 @@
 const STATUS_PILL = { 'Pending':'pill-pending', 'Approved':'pill-approved', 'Rejected':'pill-rejected', 'Expired':'pill-todo' };
 
 const RA = [
-  { id:'BSI-RA-007', type:'short', project:'BSI Core Infra VA — Q2',    app:'BSI - Infra',           findings:{c:0,h:1,m:1,l:0}, by:'Abu Rizal Mahdi',  submitted:'2026-05-11', expires:'2026-08-12', status:'Pending', days:9 },
-  { id:'KTB-RA-013', type:'short', project:'KTB HRIS Mobile Pentest',   app:'KTB - HRIS',            findings:{c:0,h:1,m:2,l:1}, by:'Nur Hasbullah M.', submitted:'2026-05-15', expires:'2026-08-15', status:'Pending', days:5 },
-  { id:'MMK-RA-003', type:'long',  project:'MMKSI Microsite Pentest',   app:'MMKSI - Microsite',     findings:{c:0,h:0,m:0,l:2}, by:'Sarah Park',       submitted:'2026-05-18', expires:'2027-05-15', status:'Pending', days:2 },
+  { id:'NSB-RA-007', type:'short', project:'Northstar Bank Core Infra VA — Q2',    app:'Northstar Bank - Infra',           findings:{c:0,h:1,m:1,l:0}, by:'Abu Rizal Mahdi',  submitted:'2026-05-11', expires:'2026-08-12', status:'Pending', days:9 },
+  { id:'TMA-RA-013', type:'short', project:'Trimatra Auto HRIS Mobile Pentest',   app:'Trimatra Auto - HRIS',            findings:{c:0,h:1,m:2,l:1}, by:'Nur Hasbullah M.', submitted:'2026-05-15', expires:'2026-08-15', status:'Pending', days:5 },
+  { id:'MMK-RA-003', type:'long',  project:'Wahana Motorindo Microsite Pentest',   app:'Wahana Motorindo - Microsite',     findings:{c:0,h:0,m:0,l:2}, by:'Sarah Park',       submitted:'2026-05-18', expires:'2027-05-15', status:'Pending', days:2 },
 
-  { id:'BSI-RA-001', type:'long',  project:'BSI Core Infra VA — Q2',    app:'BSI - Infra',           findings:{c:0,h:2,m:1,l:0}, by:'Abu Rizal Mahdi',  submitted:'2026-04-12', expires:'2027-04-20', status:'Approved' },
-  { id:'KTB-RA-009', type:'short', project:'KTB D-Net Interface VAPT',  app:'KTB - D-Net Interface', findings:{c:0,h:0,m:3,l:2}, by:'Budi',             submitted:'2026-03-22', expires:'2026-06-22', status:'Approved' },
-  { id:'MMK-RA-004', type:'long',  project:'MMKSI VTS Web Audit',       app:'MMKSI - VTS',           findings:{c:0,h:0,m:2,l:1}, by:'John Lee',         submitted:'2026-04-05', expires:'2027-04-05', status:'Approved' },
-  { id:'BSI-RA-005', type:'short', project:'BSI Timesheet VA',          app:'BSI - Timesheet',       findings:{c:0,h:0,m:0,l:1}, by:'John Lee',         submitted:'2025-12-08', expires:'2026-06-08', status:'Approved' },
-  { id:'BSI-RA-007a',type:'long',  project:'BSI Core Infra VA — Q2',    app:'BSI - Infra',           findings:{c:0,h:1,m:1,l:0}, by:'Abu Rizal Mahdi',  submitted:'2026-02-15', expires:'2027-02-15', status:'Approved' },
+  { id:'NSB-RA-001', type:'long',  project:'Northstar Bank Core Infra VA — Q2',    app:'Northstar Bank - Infra',           findings:{c:0,h:2,m:1,l:0}, by:'Abu Rizal Mahdi',  submitted:'2026-04-12', expires:'2027-04-20', status:'Approved' },
+  { id:'TMA-RA-009', type:'short', project:'Trimatra Auto D-Net Interface VAPT',  app:'Trimatra Auto - D-Net Interface', findings:{c:0,h:0,m:3,l:2}, by:'Budi',             submitted:'2026-03-22', expires:'2026-06-22', status:'Approved' },
+  { id:'MMK-RA-004', type:'long',  project:'Wahana Motorindo VTS Web Audit',       app:'Wahana Motorindo - VTS',           findings:{c:0,h:0,m:2,l:1}, by:'John Lee',         submitted:'2026-04-05', expires:'2027-04-05', status:'Approved' },
+  { id:'NSB-RA-005', type:'short', project:'Northstar Bank Timesheet VA',          app:'Northstar Bank - Timesheet',       findings:{c:0,h:0,m:0,l:1}, by:'John Lee',         submitted:'2025-12-08', expires:'2026-06-08', status:'Approved' },
+  { id:'NSB-RA-007a',type:'long',  project:'Northstar Bank Core Infra VA — Q2',    app:'Northstar Bank - Infra',           findings:{c:0,h:1,m:1,l:0}, by:'Abu Rizal Mahdi',  submitted:'2026-02-15', expires:'2027-02-15', status:'Approved' },
 
-  { id:'MMK-RA-002', type:'short', project:'MMKSI VTS Web Audit',       app:'MMKSI - VTS',           findings:{c:0,h:1,m:0,l:0}, by:'John Lee',         submitted:'2026-04-26', expires:'—',          status:'Rejected' },
-  { id:'KTB-RA-002', type:'long',  project:'KTB HRIS Mobile Pentest',   app:'KTB - HRIS',            findings:{c:0,h:0,m:2,l:1}, by:'Nur Hasbullah M.', submitted:'2026-03-18', expires:'—',          status:'Rejected' },
+  { id:'MMK-RA-002', type:'short', project:'Wahana Motorindo VTS Web Audit',       app:'Wahana Motorindo - VTS',           findings:{c:0,h:1,m:0,l:0}, by:'John Lee',         submitted:'2026-04-26', expires:'—',          status:'Rejected' },
+  { id:'TMA-RA-002', type:'long',  project:'Trimatra Auto HRIS Mobile Pentest',   app:'Trimatra Auto - HRIS',            findings:{c:0,h:0,m:2,l:1}, by:'Nur Hasbullah M.', submitted:'2026-03-18', expires:'—',          status:'Rejected' },
 
-  { id:'KTB-RA-001', type:'short', project:'KTB D-Net Interface VAPT',  app:'KTB - D-Net Interface', findings:{c:0,h:0,m:1,l:1}, by:'Budi',             submitted:'2025-09-15', expires:'2025-12-31', status:'Expired' },
+  { id:'TMA-RA-001', type:'short', project:'Trimatra Auto D-Net Interface VAPT',  app:'Trimatra Auto - D-Net Interface', findings:{c:0,h:0,m:1,l:1}, by:'Budi',             submitted:'2025-09-15', expires:'2025-12-31', status:'Expired' },
 ];
 
 function sevMix(f) {
