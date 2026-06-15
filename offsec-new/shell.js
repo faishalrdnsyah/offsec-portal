@@ -234,15 +234,15 @@
   // ============== AI Chat panel ==============
   const STARTERS = [
     { icon: 'trending_up', text: 'What are the top 3 critical findings this month?' },
-    { icon: 'lightbulb',   text: 'Suggest remediation for the SQL Injection on Northstar Bank - Infra' },
+    { icon: 'lightbulb',   text: 'Suggest remediation for the SQL Injection on Northstar Bank - Aegis' },
     { icon: 'summarize',   text: 'Summarize unresolved HIGH findings older than 30 days' },
     { icon: 'show_chart',  text: 'How is our remediation rate trending vs last quarter?' },
   ];
   const REPLIES = [
-    "Looking at your dashboard, **3 HIGH-severity findings** are currently open: SQL Injection on `/api/v2/users` (Northstar Bank - Infra), Stored XSS on Trimatra Auto - HRIS profile bio, and IDOR on Wahana Motorindo - D-Net Interface. The oldest has been open 14 days.",
-    "For the SQL Injection on Northstar Bank - Infra: (1) replace string concatenation with parameterized queries, (2) add input validation at the API gateway, (3) enable WAF rule OWASP-942. Work item #114201 is assigned to Sarah Park — I can draft a remediation task if you'd like.",
-    "Your remediation rate is **82.52%**, up from 76.8% last quarter. Mean time to remediation has improved from 6.4 days to 4.2 days. The biggest win was Northstar Bank - Infra closing 79 items via the Q1 patch cycle.",
-    "I found **194 overdue findings**. The top contributor is Northstar Bank - Infra (103 open items), most of which are LOW severity (192). Want me to generate an action plan grouped by assignee?",
+    "Looking at your dashboard, **3 HIGH-severity findings** are currently open: SQL Injection on `/api/v2/users` (Northstar Bank - Aegis), Stored XSS on Trimatra Auto - Orion profile bio, and IDOR on Wahana Motorindo - Helios Interface. The oldest has been open 14 days.",
+    "For the SQL Injection on Northstar Bank - Aegis: (1) replace string concatenation with parameterized queries, (2) add input validation at the API gateway, (3) enable WAF rule OWASP-942. Work item #114201 is assigned to Sarah Park — I can draft a remediation task if you'd like.",
+    "Your remediation rate is **82.52%**, up from 76.8% last quarter. Mean time to remediation has improved from 6.4 days to 4.2 days. The biggest win was Northstar Bank - Aegis closing 79 items via the Q1 patch cycle.",
+    "I found **194 overdue findings**. The top contributor is Northstar Bank - Aegis (103 open items), most of which are LOW severity (192). Want me to generate an action plan grouped by assignee?",
   ];
 
   let chatMessages = [{

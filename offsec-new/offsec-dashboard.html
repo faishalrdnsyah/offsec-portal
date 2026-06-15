@@ -865,45 +865,45 @@
 <script>
 /* ========================== DATA ========================== */
 const APP_SEVERITY = [
-  { app: 'Northstar Bank - Infra',             high: 174, med: 0,  low: 18,  color: '#dc2626' },
-  { app: 'Wahana Motorindo - Microsite',       high: 2,   med: 20, low: 79,  color: '#ec4899' },
-  { app: 'Trimatra Auto - HRIS',              high: 5,   med: 15, low: 32,  color: '#f59e0b' },
-  { app: 'Wahana Motorindo - VTS',             high: 3,   med: 14, low: 26,  color: '#06b6d4' },
-  { app: 'Trimatra Auto - D-Net Interface',   high: 5,   med: 6,  low: 26,  color: '#10b981' },
-  { app: 'Northstar Bank - Timesheet',         high: 3,   med: 16, low: 15,  color: '#8b5cf6' },
-  { app: 'Trimatra Auto - FDMA CMS Sales',    high: 0,   med: 7,  low: 23,  color: '#ef4444' },
-  { app: 'Trimatra Auto - Karoseri Portal',   high: 1,   med: 7,  low: 20,  color: '#84cc16' },
-  { app: 'Wahana Motorindo - D-Net Interface', high: 5,   med: 1,  low: 20,  color: '#a855f7' },
-  { app: 'Trimatra Auto - Supplier Portal',   high: 3,   med: 6,  low: 15,  color: '#f97316' },
+  { app: 'Northstar Bank - Aegis',             high: 174, med: 0,  low: 18,  color: '#dc2626' },
+  { app: 'Wahana Motorindo - Nova',       high: 2,   med: 20, low: 79,  color: '#ec4899' },
+  { app: 'Trimatra Auto - Orion',              high: 5,   med: 15, low: 32,  color: '#f59e0b' },
+  { app: 'Wahana Motorindo - Sentinel',             high: 3,   med: 14, low: 26,  color: '#06b6d4' },
+  { app: 'Trimatra Auto - Helios Interface',   high: 5,   med: 6,  low: 26,  color: '#10b981' },
+  { app: 'Northstar Bank - Chronos',         high: 3,   med: 16, low: 15,  color: '#8b5cf6' },
+  { app: 'Trimatra Auto - Vega CMS Sales',    high: 0,   med: 7,  low: 23,  color: '#ef4444' },
+  { app: 'Trimatra Auto - Forge Portal',   high: 1,   med: 7,  low: 20,  color: '#84cc16' },
+  { app: 'Wahana Motorindo - Helios Interface', high: 5,   med: 1,  low: 20,  color: '#a855f7' },
+  { app: 'Trimatra Auto - Nexus Portal',   high: 3,   med: 6,  low: 15,  color: '#f97316' },
 ];
 
 const STATUS_DATA = [
-  { app: 'Northstar Bank - Infra',       acceptance: 126, closed: 79, closedqa: 58, progress: 0,  open: 103 },
-  { app: 'Wahana Motorindo - Microsite', acceptance: 28,  closed: 73, closedqa: 0,  progress: 0,  open: 0 },
-  { app: 'Trimatra Auto - HRIS',        acceptance: 38,  closed: 0,  closedqa: 0,  progress: 14, open: 0 },
-  { app: 'Wahana Motorindo - VTS',       acceptance: 43,  closed: 0,  closedqa: 0,  progress: 0,  open: 0 },
-  { app: 'Trimatra Auto - D-Net',       acceptance: 0,   closed: 37, closedqa: 0,  progress: 0,  open: 0 },
-  { app: 'Northstar Bank - Timesheet',   acceptance: 29,  closed: 0,  closedqa: 0,  progress: 5,  open: 0 },
-  { app: 'Trimatra Auto - FDMA',        acceptance: 30,  closed: 0,  closedqa: 0,  progress: 0,  open: 0 },
+  { app: 'Northstar Bank - Aegis',       acceptance: 126, closed: 79, closedqa: 58, progress: 0,  open: 103 },
+  { app: 'Wahana Motorindo - Nova', acceptance: 28,  closed: 73, closedqa: 0,  progress: 0,  open: 0 },
+  { app: 'Trimatra Auto - Orion',        acceptance: 38,  closed: 0,  closedqa: 0,  progress: 14, open: 0 },
+  { app: 'Wahana Motorindo - Sentinel',       acceptance: 43,  closed: 0,  closedqa: 0,  progress: 0,  open: 0 },
+  { app: 'Trimatra Auto - Helios',       acceptance: 0,   closed: 37, closedqa: 0,  progress: 0,  open: 0 },
+  { app: 'Northstar Bank - Chronos',   acceptance: 29,  closed: 0,  closedqa: 0,  progress: 5,  open: 0 },
+  { app: 'Trimatra Auto - Vega',        acceptance: 30,  closed: 0,  closedqa: 0,  progress: 0,  open: 0 },
 ];
 
 const FINDINGS = [
-  { id:'98354',  fy:2024, finding:'FE - Content Security Policy (CSP) Header Not Set',  activity:'VA',   app:'Trimatra Auto - Sparepart Catalog', assigned:'Abu Rizal Mahdi',  due:'16-Dec-24', sev:'low',  status:'acceptance', remarks:'Acceptance' },
-  { id:'103522', fy:2024, finding:'Concurrent Session',                                   activity:'VAPT', app:'Trimatra Auto - Microsite Career', assigned:'Budi',             due:'29-Jan-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
-  { id:'107464', fy:2024, finding:'Missing Content Security Policy Header',               activity:'VA',   app:'Trimatra Auto - Visit',            assigned:'Nur Hasbullah M.', due:'23-Feb-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
-  { id:'113469', fy:2024, finding:'Outdated Bootstrap Version With Vulnerability',        activity:'VAPT', app:'Wahana Motorindo - Microsite',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
-  { id:'113484', fy:2024, finding:'Outdated TinyMCE Version With Vulnerability',          activity:'VAPT', app:'Wahana Motorindo - Microsite',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
-  { id:'113494', fy:2024, finding:'Outdated Datatables Version With Vulnerability',       activity:'VAPT', app:'Wahana Motorindo - Microsite',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
-  { id:'113514', fy:2024, finding:'Permissive Content Security Policy Detected',          activity:'VAPT', app:'Wahana Motorindo - Microsite',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
-  { id:'113545', fy:2024, finding:'Outdated TinyMCE Version With Vulnerability',          activity:'VAPT', app:'Wahana Motorindo - Microsite',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
-  { id:'114201', fy:2025, finding:'SQL Injection on /api/v2/users endpoint',              activity:'VAPT', app:'Northstar Bank - Infra',            assigned:'Sarah Park',       due:'02-May-25', sev:'high', status:'open',       remarks:'Critical patch required' },
-  { id:'114310', fy:2025, finding:'HTTP/2 Rapid Reset DoS on edge servers',               activity:'VA',   app:'Northstar Bank - Infra',            assigned:'John Lee',         due:'14-May-25', sev:'high', status:'progress',   remarks:'In remediation' },
-  { id:'114455', fy:2025, finding:'Stored XSS on profile bio field',                       activity:'VAPT', app:'Trimatra Auto - HRIS',             assigned:'Nur Hasbullah M.', due:'18-May-25', sev:'high', status:'open',       remarks:'Reproduced staging' },
-  { id:'114502', fy:2025, finding:'TLS 1.0/1.1 enabled on admin host',                     activity:'VA',   app:'Trimatra Auto - D-Net Interface',  assigned:'Budi',             due:'22-May-25', sev:'med',  status:'closedqa',   remarks:'Pending QA verify' },
-  { id:'114573', fy:2025, finding:'Missing rate-limit on /auth/login (brute force)',      activity:'VAPT', app:'Wahana Motorindo - VTS',            assigned:'Abu Rizal Mahdi',  due:'28-May-25', sev:'med',  status:'progress',   remarks:'WIP — sprint 24' },
-  { id:'114601', fy:2025, finding:'Sensitive data in client-side localStorage',           activity:'VAPT', app:'Northstar Bank - Timesheet',        assigned:'Sarah Park',       due:'01-Jun-25', sev:'med',  status:'open',       remarks:'—' },
-  { id:'114789', fy:2025, finding:'Server header discloses nginx version',                 activity:'VA',   app:'Trimatra Auto - Karoseri Portal',  assigned:'John Lee',         due:'08-Jun-25', sev:'low',  status:'closed',     remarks:'Closed 03-Jun' },
-  { id:'114802', fy:2025, finding:'IDOR — orders accessible across tenants',               activity:'VAPT', app:'Wahana Motorindo - D-Net Interface',assigned:'Nur Hasbullah M.', due:'12-Jun-25', sev:'high', status:'open',       remarks:'High priority' },
+  { id:'98354',  fy:2024, finding:'FE - Content Security Policy (CSP) Header Not Set',  activity:'VA',   app:'Trimatra Auto - Catalyst Catalog', assigned:'Abu Rizal Mahdi',  due:'16-Dec-24', sev:'low',  status:'acceptance', remarks:'Acceptance' },
+  { id:'103522', fy:2024, finding:'Concurrent Session',                                   activity:'VAPT', app:'Trimatra Auto - Nova Career', assigned:'Budi',             due:'29-Jan-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
+  { id:'107464', fy:2024, finding:'Missing Content Security Policy Header',               activity:'VA',   app:'Trimatra Auto - Compass',            assigned:'Nur Hasbullah M.', due:'23-Feb-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
+  { id:'113469', fy:2024, finding:'Outdated Bootstrap Version With Vulnerability',        activity:'VAPT', app:'Wahana Motorindo - Nova',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
+  { id:'113484', fy:2024, finding:'Outdated TinyMCE Version With Vulnerability',          activity:'VAPT', app:'Wahana Motorindo - Nova',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
+  { id:'113494', fy:2024, finding:'Outdated Datatables Version With Vulnerability',       activity:'VAPT', app:'Wahana Motorindo - Nova',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
+  { id:'113514', fy:2024, finding:'Permissive Content Security Policy Detected',          activity:'VAPT', app:'Wahana Motorindo - Nova',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
+  { id:'113545', fy:2024, finding:'Outdated TinyMCE Version With Vulnerability',          activity:'VAPT', app:'Wahana Motorindo - Nova',      assigned:'Abu Rizal Mahdi',  due:'06-Apr-25', sev:'low',  status:'acceptance', remarks:'Acceptance' },
+  { id:'114201', fy:2025, finding:'SQL Injection on /api/v2/users endpoint',              activity:'VAPT', app:'Northstar Bank - Aegis',            assigned:'Sarah Park',       due:'02-May-25', sev:'high', status:'open',       remarks:'Critical patch required' },
+  { id:'114310', fy:2025, finding:'HTTP/2 Rapid Reset DoS on edge servers',               activity:'VA',   app:'Northstar Bank - Aegis',            assigned:'John Lee',         due:'14-May-25', sev:'high', status:'progress',   remarks:'In remediation' },
+  { id:'114455', fy:2025, finding:'Stored XSS on profile bio field',                       activity:'VAPT', app:'Trimatra Auto - Orion',             assigned:'Nur Hasbullah M.', due:'18-May-25', sev:'high', status:'open',       remarks:'Reproduced staging' },
+  { id:'114502', fy:2025, finding:'TLS 1.0/1.1 enabled on admin host',                     activity:'VA',   app:'Trimatra Auto - Helios Interface',  assigned:'Budi',             due:'22-May-25', sev:'med',  status:'closedqa',   remarks:'Pending QA verify' },
+  { id:'114573', fy:2025, finding:'Missing rate-limit on /auth/login (brute force)',      activity:'VAPT', app:'Wahana Motorindo - Sentinel',            assigned:'Abu Rizal Mahdi',  due:'28-May-25', sev:'med',  status:'progress',   remarks:'WIP — sprint 24' },
+  { id:'114601', fy:2025, finding:'Sensitive data in client-side localStorage',           activity:'VAPT', app:'Northstar Bank - Chronos',        assigned:'Sarah Park',       due:'01-Jun-25', sev:'med',  status:'open',       remarks:'—' },
+  { id:'114789', fy:2025, finding:'Server header discloses nginx version',                 activity:'VA',   app:'Trimatra Auto - Forge Portal',  assigned:'John Lee',         due:'08-Jun-25', sev:'low',  status:'closed',     remarks:'Closed 03-Jun' },
+  { id:'114802', fy:2025, finding:'IDOR — orders accessible across tenants',               activity:'VAPT', app:'Wahana Motorindo - Helios Interface',assigned:'Nur Hasbullah M.', due:'12-Jun-25', sev:'high', status:'open',       remarks:'High priority' },
 ];
 
 const FILTER_DEF = [
@@ -1255,15 +1255,15 @@ function setActiveNav(id) {
 /* ========================== CHAT ========================== */
 const STARTERS = [
   { icon:'trending_up', text:'What are the top 3 critical findings this month?' },
-  { icon:'lightbulb',   text:'Suggest remediation for the SQL Injection on Northstar Bank - Infra' },
+  { icon:'lightbulb',   text:'Suggest remediation for the SQL Injection on Northstar Bank - Aegis' },
   { icon:'summarize',   text:'Summarize unresolved HIGH findings older than 30 days' },
   { icon:'show_chart',  text:'How is our remediation rate trending vs last quarter?' },
 ];
 const MOCK_REPLIES = [
-  "Looking at your dashboard, **3 HIGH-severity findings** are currently open: SQL Injection on `/api/v2/users` (Northstar Bank - Infra), Stored XSS on Trimatra Auto - HRIS profile bio, and IDOR on Wahana Motorindo - D-Net Interface. The oldest has been open 14 days.",
-  "For the SQL Injection on Northstar Bank - Infra: (1) replace string concatenation with parameterized queries, (2) add input validation at the API gateway, (3) enable WAF rule OWASP-942. Work item #114201 is assigned to Sarah Park — I can draft a remediation task if you'd like.",
-  "Your remediation rate is **82.52%**, up from 76.8% last quarter. Mean time to remediation has improved from 6.4 days to 4.2 days. The biggest win was Northstar Bank - Infra closing 79 items via the Q1 patch cycle.",
-  "I found **194 overdue findings**. The top contributor is Northstar Bank - Infra (103 open items), most of which are LOW severity (192). Want me to generate an action plan grouped by assignee?",
+  "Looking at your dashboard, **3 HIGH-severity findings** are currently open: SQL Injection on `/api/v2/users` (Northstar Bank - Aegis), Stored XSS on Trimatra Auto - Orion profile bio, and IDOR on Wahana Motorindo - Helios Interface. The oldest has been open 14 days.",
+  "For the SQL Injection on Northstar Bank - Aegis: (1) replace string concatenation with parameterized queries, (2) add input validation at the API gateway, (3) enable WAF rule OWASP-942. Work item #114201 is assigned to Sarah Park — I can draft a remediation task if you'd like.",
+  "Your remediation rate is **82.52%**, up from 76.8% last quarter. Mean time to remediation has improved from 6.4 days to 4.2 days. The biggest win was Northstar Bank - Aegis closing 79 items via the Q1 patch cycle.",
+  "I found **194 overdue findings**. The top contributor is Northstar Bank - Aegis (103 open items), most of which are LOW severity (192). Want me to generate an action plan grouped by assignee?",
 ];
 let chatMessages = [
   { role:'bot', text:"Hi! I'm your Offensive Sec AI assistant. I can help you analyze findings, suggest remediations, and generate reports. What would you like to explore?", time:'10:00' }

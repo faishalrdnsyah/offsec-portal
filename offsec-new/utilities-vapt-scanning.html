@@ -247,10 +247,10 @@
                 <label class="field-label">Link to Project</label>
                 <select id="inp-project" class="field">
                   <option value="">— None (standalone scan) —</option>
-                  <option value="PRJ-001">Northstar Bank Core Infra VA — Q2</option>
-                  <option value="PRJ-002">Wahana Motorindo Microsite Pentest</option>
-                  <option value="PRJ-004">Wahana Motorindo VTS Web Audit</option>
-                  <option value="PRJ-005">Trimatra Auto D-Net Interface VAPT</option>
+                  <option value="PRJ-001">Northstar Bank Core Aegis VA — Q2</option>
+                  <option value="PRJ-002">Wahana Motorindo Nova Pentest</option>
+                  <option value="PRJ-004">Wahana Motorindo Sentinel Web Audit</option>
+                  <option value="PRJ-005">Trimatra Auto Helios Interface VAPT</option>
                 </select>
               </div>
 
@@ -583,12 +583,12 @@ function statusPill(s){
 // ── History (mocked) ──
 const MOCK_HISTORY = [
   { id:'SCN-487', target:'api.northstarbank.local',          profile:'Full',   started:'26-May 09:42', dur:'32m', findings:8, status:'completed' },
-  { id:'SCN-486', target:'wahanamotorindo-microsite.id',     profile:'Quick',  started:'26-May 09:10', dur:'6m',  findings:2, status:'completed' },
+  { id:'SCN-486', target:'wahanamotorindo-nova.id',     profile:'Quick',  started:'26-May 09:10', dur:'6m',  findings:2, status:'completed' },
   { id:'SCN-485', target:'10.20.4.0/24',           profile:'Full',   started:'26-May 08:55', dur:'—',   findings:0, status:'running' },
-  { id:'SCN-484', target:'hris.trimatraauto.internal',      profile:'Custom', started:'25-May 17:31', dur:'14m', findings:5, status:'completed' },
-  { id:'SCN-483', target:'staging.dnet.wahanamotorindo.id',  profile:'Full',   started:'25-May 16:02', dur:'—',   findings:0, status:'killed' },
-  { id:'SCN-482', target:'vts.wahanamotorindo.id',           profile:'Quick',  started:'25-May 14:48', dur:'7m',  findings:1, status:'completed' },
-  { id:'SCN-481', target:'supplier.trimatraauto.com',       profile:'Full',   started:'25-May 11:20', dur:'—',   findings:0, status:'failed' },
+  { id:'SCN-484', target:'orion.trimatraauto.internal',      profile:'Custom', started:'25-May 17:31', dur:'14m', findings:5, status:'completed' },
+  { id:'SCN-483', target:'staging.helios.wahanamotorindo.id',  profile:'Full',   started:'25-May 16:02', dur:'—',   findings:0, status:'killed' },
+  { id:'SCN-482', target:'sentinel.wahanamotorindo.id',           profile:'Quick',  started:'25-May 14:48', dur:'7m',  findings:1, status:'completed' },
+  { id:'SCN-481', target:'nexus.trimatraauto.com',       profile:'Full',   started:'25-May 11:20', dur:'—',   findings:0, status:'failed' },
 ];
 function renderHistory(rows){
   const tbody = document.getElementById('history-body');
